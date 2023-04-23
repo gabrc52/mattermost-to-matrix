@@ -18,7 +18,7 @@ for channel in channels:
     # Hardcoded behavior for my use-case. TODO: generalize to a list of blocked channels or keywords
     if 'High Volume' in channel['display_name']:
         print('   skipping')
-        break
+        continue
 
     # Join if necessary
     mm.add_user_to_channel(channel['id'], own_id)
