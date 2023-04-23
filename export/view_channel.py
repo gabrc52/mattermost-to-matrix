@@ -31,7 +31,7 @@ def view_channel(channel_id):
         exit(1)
     messages = json.load(open(filename, 'r'))
 
-    html = NamedTemporaryFile(prefix='mattermost', mode='w')
+    html = NamedTemporaryFile(prefix='mattermost', mode='w', delete=False)
     print('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Exported Messages</title><link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css"></head><body>', file=html)
     print('<table>', file=html)
     print('<thead><tr><th>Date</th><th>Sender</th><th>Message</th></tr></thead>', file=html)
