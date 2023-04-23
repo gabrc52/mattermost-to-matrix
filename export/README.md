@@ -21,3 +21,7 @@ Everything will be downloaded into JSON files.
  * `export_all_channels.py`: Exports all messages from **every public channel in the team**.
 
  * `download_media.py`: Once you export messages, it can go over the media in them, and download it. You can safely run it more than once if you download more messages later, as it will only download media that has not already been downloaded.
+
+## Other scripts:
+ 
+ * `view_channel.py`: View a dumped channel in the browser. Call: `python view_channel.py channel_id`. This is more of a proof-of-concept, since the final destination is Matrix, so it needs some love if someone does want that.
