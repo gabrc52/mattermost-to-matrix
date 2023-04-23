@@ -16,6 +16,7 @@ def export_channel(channel_id):
     filename = f'messages/{channel_id}.json'
 
     if os.path.exists(filename):
+        print("   File already found, updating instead")
         existing_posts = json.load(open(filename, 'r'))
         existing_ids = {post['id'] for post in existing_posts}
         new_posts = []
