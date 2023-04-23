@@ -22,6 +22,8 @@ Everything will be downloaded into JSON files.
 
  * `download_media.py`: Once you export messages, it can go over the media in them, and download it. You can safely run it more than once if you download more messages later, as it will only download media that has not already been downloaded.
 
+ * `emoji.py`: Re-generates emoji.json based on the content of emoji.html, which comes from "Inspect element"ing Mattermost. It still needs testing with new Mattermost versions.
+
 ## Other scripts:
  
  * `view_channel.py`: View a dumped channel in the browser. Call: `python view_channel.py channel_id`. This is more of a proof-of-concept, since the final destination is Matrix, so it needs some love if someone does want that.

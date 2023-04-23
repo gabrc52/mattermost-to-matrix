@@ -11,3 +11,6 @@ playground.py
 private*
 *.json
 media/*
+
+# Committing the emojis is fine
+!emoji.json
