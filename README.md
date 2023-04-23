@@ -8,6 +8,6 @@ Note that this is for migrating past messages to Matrix. To copy over present an
 
 See the respective subdirectories to read their READMEs
 
-* [Exporting messages from Mattermost](export)
+* [Exporting messages from Mattermost](export/README.md)
 * Importing messages to Matrix (TBD)
 
