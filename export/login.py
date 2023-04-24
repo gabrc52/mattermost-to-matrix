@@ -1,5 +1,5 @@
 import mattermost
 from constants import *
 
-mm = mattermost.MMApi("https://mattermost.mit.edu/api")
+mm = mattermost.MMApi(f"https://{DOMAIN}/api")
 mm.login(USERNAME, PASSWORD)

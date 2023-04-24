@@ -2,7 +2,7 @@
 
 ## Configuration:
 
-`constants.py`: You must create this file before using any of the export scripts. Must contain `USERNAME`, `PASSWORD` and `TEAM_ID` as Python variables.
+`constants.py`: You must create this file before using any of the export scripts. Must contain `USERNAME`, `PASSWORD`, `DOMAIN` (such as mattermost.example.com, without any protocol), and `TEAM_ID` as Python variables.
 
 ## Export scripts:
 
