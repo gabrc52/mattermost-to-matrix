@@ -1,0 +1,1 @@
+This folder contains additional docs. For now it is just documentation about Mattermost, to aid in the development of this integration.

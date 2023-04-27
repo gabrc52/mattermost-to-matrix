@@ -1,6 +1,6 @@
 # Some docs about Mattermost
 
-***Important note: The Mattermost server I am running this on likely has an outdated version of Mattermost, so things may differ for you.***
+***Important note: The Mattermost server I am running this on has an outdated version of Mattermost, so things may differ for you.***
 
 Here is some documentation on the way the Mattermost JSON payloads for messages are formed.
 
