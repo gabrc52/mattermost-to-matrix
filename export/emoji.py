@@ -15,7 +15,7 @@ For now, let us do #1. PRs welcome to add the emojis from more recent versions o
 from bs4 import BeautifulSoup, element, PageElement
 import json
 
-soup = BeautifulSoup(open('emoji.html', 'r'), 'html.parser')
+soup = BeautifulSoup(open('../downloaded/emoji.html', 'r'), 'html.parser')
 
 root = soup.div.div
 
@@ -41,4 +41,4 @@ for category in categories:
         print(parsed, end='')
     print()
 
-json.dump(emoji_map, open('emoji.json', 'w'))
+json.dump(emoji_map, open('../downloaded/emoji.json', 'w'))

@@ -3,8 +3,8 @@ import json
 import os
 
 # Create subdirectory if needed
-if not os.path.exists('media'):
-    os.mkdir('media')
+if not os.path.exists('../downloaded/media'):
+    os.mkdir('../downloaded/media')
 
 def export_channel(channel_id):
     """
@@ -13,7 +13,7 @@ def export_channel(channel_id):
     If the JSON file already exists, it updates it to add the newest messages
     Note that edits are not reflected.
     """
-    filename = f'messages/{channel_id}.json'
+    filename = f'../downloaded/messages/{channel_id}.json'
 
     if os.path.exists(filename):
         print("   File already found, updating instead")

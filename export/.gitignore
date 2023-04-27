@@ -9,8 +9,3 @@ playground.py
 
 # Anything that's supposed to be private
 private*
-*.json
-media/*
-
-# Committing the emojis is fine
-!emoji.json

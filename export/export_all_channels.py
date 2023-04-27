@@ -6,11 +6,11 @@ import json
 own_account = mm.get_user()
 own_id = own_account['id']
 
-if not os.path.exists('channels.json'):
+if not os.path.exists('../downloaded/channels.json'):
     import export_channel_list
     # No need to do anything else, we have created the file now
 
-channels = json.load(open('channels.json', 'r'))
+channels = json.load(open('../downloaded/channels.json', 'r'))
 
 for channel in channels:
     print('Downloading channel', channel['display_name'])

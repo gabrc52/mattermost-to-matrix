@@ -7,11 +7,11 @@ import webbrowser
 
 # Note the reverse chronological order
 
-if not os.path.exists('users.json'):
+if not os.path.exists('../downloaded/users.json'):
     print("File users.json does not exist. Please run export_users.py first", file=sys.stderr)
     exit(1)
 
-users = json.load(open('users.json', 'r'))
+users = json.load(open('../downloaded/users.json', 'r'))
 users_by_id = {user['id']:user for user in users}
 
 def get_username(user_id):
@@ -25,7 +25,7 @@ def get_printable_time(timestamp):
     return f"{time:%Y-%m-%d %H:%M}" # removed :%S, don't want to print
 
 def view_channel(channel_id):
-    filename = f'messages/{channel_id}.json'
+    filename = f'../downloaded/messages/{channel_id}.json'
     if not os.path.exists(filename):
         print(f'File does not exist for {channel_id}. Run export_channel.py first.', file=sys.stderr)
         exit(1)
