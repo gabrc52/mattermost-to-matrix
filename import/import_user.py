@@ -1,6 +1,7 @@
 from matrix import get_app_service, get_bridged_user_mxid
 import json
 import os
+import magic
 import asyncio
 
 users = json.load(open('../downloaded/users.json'))
@@ -56,8 +57,6 @@ async def import_user(user_id):
     if os.path.exists(filename):
         with open(filename, 'rb') as f:
             contents = f.read()
-            # TODO: they are all PNG for me, but it would be best not to hardcode
-            mime_type = 'image/png'
-            image_uri = await user_api.upload_media(contents, mime_type, f.name)
+            image_uri = await user_api.upload_media(contents, magic.from_buffer(contents, mime=True), f.name)
             await user_api.set_avatar_url(image_uri)
 

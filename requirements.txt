@@ -2,3 +2,4 @@ mattermost
 beautifulsoup4
 dataclasses-json
 mautrix
+python-magic
