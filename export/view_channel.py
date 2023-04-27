@@ -50,7 +50,7 @@ def view_channel(channel_id):
             print(f'<tr><td>{date_str}</td><td>{username}</td><td>{content}</td>', file=html)
         if 'files' in message['metadata']:
             for file in message['metadata']['files']:
-                print(f'<tr><td>{date_str}</td><td>{username}</td><td><img src="file://{os.getcwd()}/media/{file["id"]}"></td>', file=html)
+                print(f'<tr><td>{date_str}</td><td>{username}</td><td><img src="file://{os.getcwd()}/../downloaded/media/{file["id"]}"></td>', file=html)
         print('</tr>', file=html)
     print('</tbody>', file=html)
     print('</table>', file=html)
