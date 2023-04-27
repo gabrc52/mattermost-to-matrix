@@ -1,6 +1,7 @@
 # Downloaded files
 *.json
 media/*
+pfp/*
 
 # Committing the emojis is fine
 !emoji.json

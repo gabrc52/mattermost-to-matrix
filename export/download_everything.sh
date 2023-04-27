@@ -14,3 +14,6 @@ echo Downloading all public messages
 python export_all_channels.py
 echo Downloading all media in those channels
 python download_media.py
+echo Downloading profile pictures
+python download_profile_pictures.py
+
