@@ -10,8 +10,6 @@ Note that this is for migrating past messages to Matrix. To copy over present an
 
 2. Export your Mattermost data using the helper script: `export/download_everything.sh`. For more info about specific things that you can export, see <export/README.md>, 
 
-*Next steps are not implemented yet:*
-
 3. Generate a Matrix registration file using `python generate_registration.py`, which will be called `registration.yaml` but you can rename.
 
 4. Register it to your homeserver, for instance <https://docs.mau.fi/bridges/general/registering-appservices.html>. If you are running Synapse you can copy the registration file to a new directory `/etc/matrix-synapse/appservices` and then edit your Synapse config to add the application service, like this:
@@ -21,7 +19,9 @@ app_service_config_files:
  - /etc/matrix-synapse/appservices/mattermost_migration.yaml
 ```
 
-5. Run the import script `python import_all.py`. To export an individual Mattermost room to a Matrix room, you can use 
+*Next steps are not implemented yet:*
+
+5. Run the import script TODO. To export an individual Mattermost room to a Matrix room, you can use TODO.
 
 6. Once you have imported your messages, you can revert the changes you made to your Synapse `config.yaml` or `conf.d`, since it is a good idea to revoke unused credentials.
 
