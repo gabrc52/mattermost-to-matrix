@@ -14,6 +14,11 @@ matrix:
   # The homeserver URL, where you can actually reach the Matrix REST API
   homeserver_url: https://matrix-synapse.example.com
 
+  # User MXIDs to add and give admin in created rooms or spaces
+  users:
+    - "@admin:example.com"
+    - "@neo:example.com"
+
   # Prefix to use for aliases; comment to change
   # room_prefix: _mattermost_
 

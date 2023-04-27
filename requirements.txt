@@ -1,3 +1,4 @@
 mattermost
 beautifulsoup4
 dataclasses-json
+mautrix

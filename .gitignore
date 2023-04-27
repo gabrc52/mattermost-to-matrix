@@ -2,7 +2,7 @@
 __pycache__
 
 # Actual config file has secrets
-config.yaml
+/config.yaml
 registration.yaml
 
 # Experimenting various things, no need to commit

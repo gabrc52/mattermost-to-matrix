@@ -18,6 +18,9 @@ class MatrixConfig:
     # Homeserver URL, where you can actually reach the Matrix REST API
     homeserver_url: str
 
+    # User MXIDs to add and give admin in created rooms or spaces
+    users: list[str]
+
     # Prefix to use for aliases
     room_prefix: Optional[str] = "_mattermost_"
 
