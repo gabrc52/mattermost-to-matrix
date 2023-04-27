@@ -1,0 +1,24 @@
+mattermost:
+  username: matrix@example.com
+  password: hunter2
+  instance: mattermost.example.com
+
+matrix:
+  # See https://spec.matrix.org/v1.6/application-service-api/#registration
+  hs_token: Please generate one with pwgen -s 64 1
+  as_token: Please generate (another) one with pwgen -s 64 1
+
+  # Homeserver name, for MXIDs
+  homeserver: example.com
+
+  # The homeserver URL, where you can actually reach the Matrix REST API
+  homeserver_url: https://matrix-synapse.example.com
+
+  # Prefix to use for aliases; comment to change
+  # room_prefix: _mattermost_
+
+  # Prefix to use for localparts of bridged users; comment to change
+  # user_prefix: _mattermost_
+
+  # The username to allocate for this application service
+  # username: mattermostbot

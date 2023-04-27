@@ -18,7 +18,7 @@ Everything will be downloaded into JSON files.
 
  * `export_channel.py`: Export all messages from a single channel of your choosing. Accepts the channel ID as parameter. Call: `python export_channel.py channel_id`
 
- * `export_all_channels.py`: Exports all messages from **every public channel in the team**.
+ * `export_all_channels.py`: Exports all messages from **every public channel in the team**. This reads `channels.json`, so if you want to exclude (or add?) channels to export, modify that file first.
 
  * `download_media.py`: Once you export messages, it can go over the media in them, and download it. You can safely run it more than once if you download more messages later, as it will only download media that has not already been downloaded.
 

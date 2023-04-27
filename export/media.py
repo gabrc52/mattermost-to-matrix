@@ -1,8 +1,5 @@
 import mattermost
-from constants import *
-
-mm = mattermost.MMApi("https://mattermost.mit.edu/api")
-mm.login(USERNAME, PASSWORD)
+from login import mm
 
 def download_media(media_id):
     """

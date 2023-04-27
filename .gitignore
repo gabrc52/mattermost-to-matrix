@@ -1,2 +1,6 @@
 # Python caches
 __pycache__
+
+# Actual config file has secrets
+config.yaml
+registration.yaml

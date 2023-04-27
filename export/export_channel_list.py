@@ -1,5 +1,4 @@
 from login import mm
-from constants import *
 import json
 import os
 

@@ -9,3 +9,4 @@ playground.py
 
 # Anything that's supposed to be private
 private*
+config.yaml
