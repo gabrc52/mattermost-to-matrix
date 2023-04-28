@@ -66,6 +66,8 @@ async def import_user(user_id):
     filename = f"../downloaded/pfp/{user_id}"
     
     # Set user profile picture if needed
+    # TODO: this assumes the profile picture never changes
+    # If this turns into a bridge, bridge pfp changes too
     avatar_url = await user_api.get_avatar_url(mxid)
     if not avatar_url and os.path.exists(filename):
             with open(filename, 'rb') as f:

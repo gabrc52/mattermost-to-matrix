@@ -8,3 +8,6 @@ registration.yaml
 # Experimenting various things, no need to commit
 playground.py
 private*
+
+# Matrix state
+mx-state.json

@@ -82,6 +82,32 @@ async def create_channel(channel_id):
 most_recent_message_in_thread = {}
 
 
+def remove_duplicates_special(tuples):
+    """
+    From a set of tuples (a,b,c), remove the duplicates
+    by ensuring that no two tuples (xa,xb,xc), (ya,yb,yc) have xa=ya and xb=yb
+
+    Fill out c by choosing arbitrarily between any of the duplicates, if applicable
+    """
+    # Rationale: someone can react with both +1 and thumbsup in Mattermost,
+    # and the duplicate reactions appear in the exported JSON.
+    # Matrix will complain about duplicate reactions, because they both map to 👍
+    helper_dict = {(a,b): c for a,b,c in tuples}
+    return {(k[0], k[1], v) for k,v in helper_dict.items()}
+
+
+def get_reactions(reactions):
+    """
+    From a Mattermost array of reactions, get a set of tuples as
+    (Mattermost user ID, reaction, timestamp)
+    """
+    return remove_duplicates_special({
+        # Currently just use the name for custom reactions because Matrix does not have them yet
+        (reaction['user_id'], emojis.get(reaction['emoji_name']) or reaction['emoji_name'], reaction['create_at'])
+        for reaction in reactions
+    })
+
+
 async def import_channel(channel_id):
     """
     Imports the entire Mattermost channel with given ID into a Matrix channel,
@@ -112,14 +138,10 @@ async def import_channel(channel_id):
 
             # Handle reactions
             if 'reactions' in message['metadata']:
-                for reaction in message['metadata']['reactions']:
-                    reactor_mxid = await import_user(reaction['user_id'])
+                for user_id, emoji, timestamp in get_reactions(message['metadata']['reactions']):
+                    reactor_mxid = await import_user(user_id)
                     reactor_api = app_service.intent(reactor_mxid)
-                    emoji_name = reaction['emoji_name']
-                    # TODO: Can't send same reaction twice
-                    # what happens is it has both +1 and thumbsup by the same person for some reason (?!)
-                    await reactor_api.react(room_id, event_id, emojis.get(emoji_name) or emoji_name, query_params={'ts': reaction['create_at']})
-
+                    await reactor_api.react(room_id, event_id, emoji, query_params={'ts': timestamp})
 
             # TODO: Handle media
 
