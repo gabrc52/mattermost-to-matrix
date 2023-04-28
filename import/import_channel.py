@@ -1,4 +1,5 @@
 from matrix import get_app_service, config, get_alias_mxid, get_user_mxid_by_localpart
+from mautrix.types import ImageInfo, BaseFileInfo
 import mautrix.errors
 import json
 import os
@@ -127,7 +128,7 @@ async def import_channel(channel_id):
     for message in reversed(messages):
         # TODO: this is pretty monolithic. Split into several functions
 
-        print(message['message'])
+        # print(message['message'])
         user_mxid = await import_user(message['user_id'])
         user_api = app_service.intent(user_mxid)
 
@@ -143,7 +144,40 @@ async def import_channel(channel_id):
                     reactor_api = app_service.intent(reactor_mxid)
                     await reactor_api.react(room_id, event_id, emoji, query_params={'ts': timestamp})
 
-            # TODO: Handle media
+            # Handle media
+            if 'files' in message['metadata']:
+                for file in message['metadata']['files']:
+                    # Upload first
+                    filename = f'../downloaded/media/{file["id"]}'
+                    with open(filename, 'rb') as f:
+                        contents = f.read()
+                        image_uri = await user_api.upload_media(contents, file['mime_type'], file['name'])
+
+                    if file['mime_type'].startswith('image'):
+                        # Images
+                        await user_api.send_image(
+                            room_id,
+                            url=image_uri,
+                            info=ImageInfo(
+                                mimetype=file['mime_type'],
+                                size=file['size'],
+                                height=file['height'],
+                                width=file['width'],
+                            ),
+                            file_name=file['name'],
+                        )
+                        pass
+                    else:
+                        # Other attachments
+                        await user_api.send_file(
+                            room_id,
+                            url=image_uri,
+                            info=BaseFileInfo(
+                                mimetype=file['mime_type'],
+                                size=file['size'],
+                            ),
+                            file_name=file['name'],
+                        )
 
             if message['is_pinned']:
                 # TODO: ensure we have permissions to pin(?)
@@ -174,6 +208,6 @@ async def import_channel(channel_id):
             print('Warning: not bridging unknown message type', message['type'], file=sys.stderr)
 
         # Remember most recent message in thread
-        # TODO: actually use it to reply
+        # TODO: actually use it to reply or make a thread
         if message['root_id']:
             most_recent_message_in_thread[message['root_id']] = message['id']
