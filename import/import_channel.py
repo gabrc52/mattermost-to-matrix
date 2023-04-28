@@ -135,15 +135,8 @@ async def import_channel(channel_id):
         # Messages without a type are normal messages
         if not message['type']:
             # TODO: handle markdown
-            # TODO: handle empty messages if sending attachments
-            event_id = await user_api.send_text(room_id, message['message'], query_params={'ts': message['create_at']})
-
-            # Handle reactions
-            if 'reactions' in message['metadata']:
-                for user_id, emoji, timestamp in get_reactions(message['metadata']['reactions']):
-                    reactor_mxid = await import_user(user_id)
-                    reactor_api = app_service.intent(reactor_mxid)
-                    await reactor_api.react(room_id, event_id, emoji, query_params={'ts': timestamp})
+            if message['message']:
+                event_id = await user_api.send_text(room_id, message['message'], query_params={'ts': message['create_at']})
 
             # Handle media
             if 'files' in message['metadata']:
@@ -156,7 +149,7 @@ async def import_channel(channel_id):
 
                     if file['mime_type'].startswith('image'):
                         # Images
-                        await user_api.send_image(
+                        event_id = await user_api.send_image(
                             room_id,
                             url=image_uri,
                             info=ImageInfo(
@@ -171,7 +164,7 @@ async def import_channel(channel_id):
                         pass
                     else:
                         # Other attachments
-                        await user_api.send_file(
+                        event_id = await user_api.send_file(
                             room_id,
                             url=image_uri,
                             info=BaseFileInfo(
@@ -181,6 +174,14 @@ async def import_channel(channel_id):
                             file_name=file['name'],
                             query_params={'ts': message['create_at']},
                         )
+
+            # Handle reactions
+            # Specifically, react to the last event ID
+            if 'reactions' in message['metadata']:
+                for user_id, emoji, timestamp in get_reactions(message['metadata']['reactions']):
+                    reactor_mxid = await import_user(user_id)
+                    reactor_api = app_service.intent(reactor_mxid)
+                    await reactor_api.react(room_id, event_id, emoji, query_params={'ts': timestamp})
 
             if message['is_pinned']:
                 # TODO: ensure we have permissions to pin(?)
