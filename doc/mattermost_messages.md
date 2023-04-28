@@ -10,6 +10,8 @@ Please don't expect it to be good. It's quite bad, and just meant for myself.
 
 ## Fields in the message
 
+ * `message`: Contents of the message, or a description of special messages (e.g. x added to y)
+
  * `id`: ID of the message
 
  * `create_at`: Timestamp of the message
