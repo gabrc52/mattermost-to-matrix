@@ -99,6 +99,8 @@ async def import_channel(channel_id):
 
     # Reverse cause reverse chronological order
     for message in reversed(messages):
+        # TODO: this is pretty monolithic. Split into several functions
+
         print(message['message'])
         user_mxid = await import_user(message['user_id'])
         user_api = app_service.intent(user_mxid)
@@ -113,9 +115,11 @@ async def import_channel(channel_id):
                 for reaction in message['metadata']['reactions']:
                     reactor_mxid = await import_user(reaction['user_id'])
                     reactor_api = app_service.intent(reactor_mxid)
-                    await reactor_api.react(room_id, event_id, emojis)
                     emoji_name = reaction['emoji_name']
-                    await user_api.react(room_id, event_id, emojis.get(emoji_name) or emoji_name, query_params={'ts': reaction['create_at']})
+                    # TODO: Can't send same reaction twice
+                    # what happens is it has both +1 and thumbsup by the same person for some reason (?!)
+                    await reactor_api.react(room_id, event_id, emojis.get(emoji_name) or emoji_name, query_params={'ts': reaction['create_at']})
+
 
             # TODO: Handle media
 
@@ -124,6 +128,7 @@ async def import_channel(channel_id):
                 await user_api.pin_message(room_id, event_id)
         elif message['type'] == 'system_join_channel':
             # TODO: set timestamp
+            # TODO: allow making the room public so bridged users can just join without duplicate events in the timeline
             await user_api.ensure_joined(room_id)
         elif message['type'] == 'system_leave_channel':
             # TODO: set timestamp
