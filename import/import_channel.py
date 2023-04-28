@@ -135,6 +135,7 @@ async def import_channel(channel_id):
         # Messages without a type are normal messages
         if not message['type']:
             # TODO: handle markdown
+            # TODO: handle empty messages if sending attachments
             event_id = await user_api.send_text(room_id, message['message'], query_params={'ts': message['create_at']})
 
             # Handle reactions
@@ -165,6 +166,7 @@ async def import_channel(channel_id):
                                 width=file['width'],
                             ),
                             file_name=file['name'],
+                            query_params={'ts': message['create_at']},
                         )
                         pass
                     else:
@@ -177,6 +179,7 @@ async def import_channel(channel_id):
                                 size=file['size'],
                             ),
                             file_name=file['name'],
+                            query_params={'ts': message['create_at']},
                         )
 
             if message['is_pinned']:
