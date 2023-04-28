@@ -1,8 +1,13 @@
 from matrix import get_app_service, get_bridged_user_mxid
 import json
 import os
+import sys
 import magic
 import asyncio
+
+if not os.path.exists('../downloaded/users.json'):
+    print(f'users.json not found! Run export_users.py first.', file=sys.stderr)
+    exit(1)
 
 users = json.load(open('../downloaded/users.json'))
 
@@ -37,6 +42,12 @@ def get_displayname(user: dict):
 
 
 async def import_user(user_id):
+    """
+    Creates a given Mattermost user into a Matrix bridged user,
+    if it does not exist already.
+
+    Returns its MXID.
+    """
     app_service = get_app_service()
     api = app_service.bot_intent()
     user = get_mattermost_user(user_id)
@@ -53,10 +64,14 @@ async def import_user(user_id):
     await user_api.set_displayname(get_displayname(user))
 
     filename = f"../downloaded/pfp/{user_id}"
-    # Set user profile picture
-    if os.path.exists(filename):
-        with open(filename, 'rb') as f:
-            contents = f.read()
-            image_uri = await user_api.upload_media(contents, magic.from_buffer(contents, mime=True), f.name)
-            await user_api.set_avatar_url(image_uri)
+    
+    # Set user profile picture if needed
+    avatar_url = await user_api.get_avatar_url(mxid)
+    if not avatar_url and os.path.exists(filename):
+            with open(filename, 'rb') as f:
+                contents = f.read()
+                image_uri = await user_api.upload_media(contents, magic.from_buffer(contents, mime=True), f.name)
+                await user_api.set_avatar_url(image_uri)
+
+    return mxid
 

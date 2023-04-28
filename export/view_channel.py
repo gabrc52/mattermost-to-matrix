@@ -34,7 +34,7 @@ def view_channel(channel_id):
     html = NamedTemporaryFile(prefix='mattermost', mode='w', delete=False)
     print('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Exported Messages</title><link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css"></head><body>', file=html)
     print('<table>', file=html)
-    print('<thead><tr><th>Date</th><th>Sender</th><th>Message</th></tr></thead>', file=html)
+    print('<thead><tr><th>Date</th><th>Sender</th><th>Message</th><th>Type</th></tr></thead>', file=html)
     print('<tbody>', file=html)
     # Reverse cause reverse chronological order
     for message in reversed(messages):
@@ -47,10 +47,10 @@ def view_channel(channel_id):
         edited = message['update_at'] != message['create_at']
         if content:
             # No content probably means image
-            print(f'<tr><td>{date_str}</td><td>{username}</td><td>{content}</td>', file=html)
+            print(f'<tr><td>{date_str}</td><td>{username}</td><td>{content}</td><td>{message["type"]}</td>', file=html)
         if 'files' in message['metadata']:
             for file in message['metadata']['files']:
-                print(f'<tr><td>{date_str}</td><td>{username}</td><td><img src="file://{os.getcwd()}/../downloaded/media/{file["id"]}"></td>', file=html)
+                print(f'<tr><td>{date_str}</td><td>{username}</td><td><img src="file://{os.getcwd()}/../downloaded/media/{file["id"]}"></td><td>(part of above message)</td>', file=html)
         print('</tr>', file=html)
     print('</tbody>', file=html)
     print('</table>', file=html)
