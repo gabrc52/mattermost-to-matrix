@@ -43,7 +43,7 @@ async def create_channel(channel_id):
     Returns the room ID on Matrix
     """
     channel = get_mattermost_channel(channel_id)
-    alias_localpart = config.matrix.room_prefix + channel['name'] + 'aaa'
+    alias_localpart = config.matrix.room_prefix + channel['name']
 
     app_service = get_app_service()
     api = app_service.bot_intent()
