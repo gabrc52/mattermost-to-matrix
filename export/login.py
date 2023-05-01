@@ -10,3 +10,6 @@ from config import config
 
 mm = mattermost.MMApi(f"https://{config.mattermost.instance}/api")
 mm.login(config.mattermost.username, config.mattermost.password)
+
+own_account = mm.get_user()
+own_id = own_account['id']
