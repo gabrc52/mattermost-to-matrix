@@ -2,6 +2,9 @@ mattermost:
   username: matrix@example.com
   password: hunter2
   instance: mattermost.example.com
+  # Uncomment to skip some channels from the export
+  # skip_channels:
+  #   - "po9ucmm6wirjbnc3irjybc333y"
 
 matrix:
   # See https://spec.matrix.org/v1.6/application-service-api/#registration
@@ -19,10 +22,10 @@ matrix:
     - "@admin:example.com"
     - "@neo:example.com"
 
-  # Prefix to use for aliases; comment to change
+  # Prefix to use for aliases; uncomment to change
   # room_prefix: _mattermost_
 
-  # Prefix to use for localparts of bridged users; comment to change
+  # Prefix to use for localparts of bridged users; uncomment to change
   # user_prefix: _mattermost_
 
   # The username to allocate for this application service

@@ -38,6 +38,9 @@ class MattermostConfig:
     password: str
     instance: str
 
+    # Channel IDs to skip exporting
+    skip_channels: tuple[str] = ()
+
 
 @dataclass_json
 @dataclass

@@ -1,4 +1,4 @@
-from export_channel import export_channel, mm, own_id
+from export_channel import export_channel, mm, own_id, config
 import os
 import json
 
@@ -17,8 +17,8 @@ def team_by_id(team_id):
 for channel in channels:
     print('Downloading channel', channel['display_name'], 'in', team_by_id(channel['team_id'])['display_name'])
 
-    # Hardcoded behavior for my use-case. TODO: generalize to a list of blocked channels or keywords
-    if 'High Volume' in channel['display_name']:
+    # Skip channels as per config
+    if channel['id'] in config.mattermost.skip_channels:
         print('   skipping')
         continue
 

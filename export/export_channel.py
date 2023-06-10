@@ -1,4 +1,4 @@
-from login import mm, own_id
+from login import mm, own_id, config
 import json
 import os
 
