@@ -7,6 +7,10 @@ if not os.path.exists('../downloaded/media'):
     os.mkdir('../downloaded/media')
 
 for filename in os.listdir('../downloaded/messages'):
+    # Skip non-JSON files (such as .gitignore)
+    if 'json' not in filename:
+        continue
+
     with open(f'../downloaded/messages/{filename}') as f:
         messages = json.load(f)
     for message in messages:
