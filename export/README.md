@@ -1,18 +1,14 @@
 # Mattermost export scripts
 
-## Configuration:
-
-`constants.py`: You must create this file before using any of the export scripts. Must contain `USERNAME`, `PASSWORD`, and `DOMAIN` (such as mattermost.example.com, without any protocol) as Python variables.
-
 ## Export scripts:
 
 Everything will be downloaded into JSON files.
 
  * **`download_everything.sh`**: Convenience script that just calls all the Python scripts to download everything.
 
- * `export_teams.py`: Export all teams. I am using a single-team Mattermost, so if you wish to do something with other teams, you need to run the scripts with a different `TEAM_ID`. PRs welcome.
+ * `export_teams.py`: Export all teams.
 
- * `export_users.py`: Exports the user directory. Note that at the moment, profile pictures are ***not*** downloaded.
+ * `export_users.py`: Exports the user directory.
 
  * `export_channel_list.py`: Exports the channel directory.
 
