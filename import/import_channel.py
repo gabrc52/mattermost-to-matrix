@@ -14,6 +14,7 @@ if not os.path.exists('../downloaded/channels.json'):
     exit(1)
 channels = json.load(open('../downloaded/channels.json', 'r'))
 
+
 def get_mattermost_channel(channel_id):
     """
     Get the Mattermost record from the given channel, by reading
@@ -62,6 +63,7 @@ async def create_channel(channel_id):
         creator_mxid = await import_user(channel['creator_id'])
         user_api = app_service.intent(creator_mxid)
         room_id = await user_api.create_room(
+            preset='public_chat',
             alias_localpart=alias_localpart,
             name=channel['display_name'],
             power_level_override={

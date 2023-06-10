@@ -29,8 +29,7 @@ def get_displayname(user: dict):
     (the concatenation of first name and last name if applicable, otherwise,
     their username)
     """
-    # TODO: add config option to only use username (important for mattermost.mit.edu
-    # because it's patched to display usernames)
+    # TODO: add config option to only use username
 
     # Being preentive if people have a spare space after their first name
     full_name = (user['first_name']+' '+user['last_name']).strip().replace('  ', ' ')
@@ -70,10 +69,10 @@ async def import_user(user_id):
     # If this turns into a bridge, bridge pfp changes too
     avatar_url = await user_api.get_avatar_url(mxid)
     if not avatar_url and os.path.exists(filename):
-            with open(filename, 'rb') as f:
-                contents = f.read()
-                image_uri = await user_api.upload_media(contents, magic.from_buffer(contents, mime=True), f.name)
-                await user_api.set_avatar_url(image_uri)
+        with open(filename, 'rb') as f:
+            contents = f.read()
+            image_uri = await user_api.upload_media(contents, magic.from_buffer(contents, mime=True), f.name)
+            await user_api.set_avatar_url(image_uri)
 
     return mxid
 
