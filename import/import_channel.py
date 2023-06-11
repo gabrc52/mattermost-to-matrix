@@ -1,5 +1,5 @@
 from matrix import get_app_service, config, get_alias_mxid, get_user_mxid_by_localpart
-from mautrix.types import ImageInfo, BaseFileInfo
+from mautrix.types import ImageInfo, BaseFileInfo, RoomCreatePreset
 import mautrix.errors
 import json
 import os
@@ -45,6 +45,8 @@ async def create_channel(channel_id):
     Returns the room ID on Matrix
     """
     channel = get_mattermost_channel(channel_id)
+    # TODO: do something like _mattermost_sipb_uplink (add team too)
+    # but make it configureable
     alias_localpart = config.matrix.room_prefix + channel['name']
 
     app_service = get_app_service()
@@ -63,7 +65,7 @@ async def create_channel(channel_id):
         creator_mxid = await import_user(channel['creator_id'])
         user_api = app_service.intent(creator_mxid)
         room_id = await user_api.create_room(
-            preset='public_chat',
+            preset=RoomCreatePreset.PUBLIC,
             alias_localpart=alias_localpart,
             name=channel['display_name'],
             power_level_override={
@@ -111,13 +113,111 @@ def get_reactions(reactions):
     })
 
 
+async def import_files_in_message(message, room_id, user_api):
+    """
+    Send the files in the Mattermost message as separate Matrix messages.
+
+    Returns the Matrix event ID of the last file sent
+    """
+    for file in message['metadata']['files']:
+        # Upload first
+        filename = f'../downloaded/media/{file["id"]}'
+        with open(filename, 'rb') as f:
+            contents = f.read()
+            image_uri = await user_api.upload_media(contents, file['mime_type'], file['name'])
+
+        if file['mime_type'].startswith('image'):
+            # Images
+            event_id = await user_api.send_image(
+                room_id,
+                url=image_uri,
+                info=ImageInfo(
+                    mimetype=file['mime_type'],
+                    size=file['size'],
+                    height=file['height'],
+                    width=file['width'],
+                ),
+                file_name=file['name'],
+                query_params={'ts': message['create_at']},
+            )
+        else:
+            # Other attachments
+            event_id = await user_api.send_file(
+                room_id,
+                url=image_uri,
+                info=BaseFileInfo(
+                    mimetype=file['mime_type'],
+                    size=file['size'],
+                ),
+                file_name=file['name'],
+                query_params={'ts': message['create_at']},
+            )
+    return event_id
+
+
+async def import_message(message, room_id):
+    """
+    Import a specific message from the Mattermost JSON format
+    into the specified room ID
+    """
+    app_service = get_app_service()
+    api = app_service.bot_intent()
+
+    user_mxid = await import_user(message['user_id'])
+    user_api = app_service.intent(user_mxid)
+
+    # Messages without a type are normal messages
+    if not message['type']:
+        # TODO: handle markdown
+        if message['message']:
+            event_id = await user_api.send_text(room_id, message['message'], query_params={'ts': message['create_at']})
+
+        # Handle media
+        if 'files' in message['metadata']:
+            event_id = await import_files_in_message(message, room_id, user_api)
+
+        # Handle reactions
+        # Specifically, react to the last event ID
+        if 'reactions' in message['metadata']:
+            for user_id, emoji, timestamp in get_reactions(message['metadata']['reactions']):
+                reactor_mxid = await import_user(user_id)
+                reactor_api = app_service.intent(reactor_mxid)
+                await reactor_api.react(room_id, event_id, emoji, query_params={'ts': timestamp})
+
+        if message['is_pinned']:
+            # TODO: ensure we have permissions to pin(?)
+            await user_api.pin_message(room_id, event_id)
+    elif message['type'] == 'system_join_channel':
+        # TODO: set timestamp!!!!!!!!!!!!
+        # manually create a method with self.api.request
+        await user_api.ensure_joined(room_id)
+    elif message['type'] == 'system_leave_channel':
+        # TODO: set timestamp
+        await user_api.leave_room(room_id)
+    elif message['type'] == 'system_add_to_channel':
+        invited_user_id = message['props']['addedUserId']
+        invited_matrix_user = await import_user(invited_user_id)
+        invited_api = app_service.intent(invited_matrix_user)
+        await user_api.invite_user(room_id, invited_matrix_user)
+        await invited_api.ensure_joined(room_id)
+    # TODO: implement these other types
+    # elif message['type'] == 'system_remove_from_channel':
+    #     pass
+    # elif message['type'] == 'system_header_change':
+    #     pass
+    # elif message['type'] == 'system_displayname_change':
+    #     pass
+    # elif message['type'] == 'system_purpose_change':
+    #     pass
+    else:
+        print('Warning: not bridging unknown message type', message['type'], file=sys.stderr)
+
+
 async def import_channel(channel_id):
     """
     Imports the entire Mattermost channel with given ID into a Matrix channel,
     and adds the users chosen in the config and makes them admin
     """
-    app_service = get_app_service()
-    api = app_service.bot_intent()
     filename = f'../downloaded/messages/{channel_id}.json'
     if not os.path.exists(filename):
         print(f'File does not exist for {channel_id}. Run export_channel.py first.', file=sys.stderr)
@@ -127,91 +227,9 @@ async def import_channel(channel_id):
     room_id = await create_channel(channel_id)
 
     # Reverse cause reverse chronological order
+    # TODO: try adding all users first because mautrix does not support it
     for message in reversed(messages):
-        # TODO: this is pretty monolithic. Split into several functions
-
-        # print(message['message'])
-        user_mxid = await import_user(message['user_id'])
-        user_api = app_service.intent(user_mxid)
-
-        # Messages without a type are normal messages
-        if not message['type']:
-            # TODO: handle markdown
-            if message['message']:
-                event_id = await user_api.send_text(room_id, message['message'], query_params={'ts': message['create_at']})
-
-            # Handle media
-            if 'files' in message['metadata']:
-                for file in message['metadata']['files']:
-                    # Upload first
-                    filename = f'../downloaded/media/{file["id"]}'
-                    with open(filename, 'rb') as f:
-                        contents = f.read()
-                        image_uri = await user_api.upload_media(contents, file['mime_type'], file['name'])
-
-                    if file['mime_type'].startswith('image'):
-                        # Images
-                        event_id = await user_api.send_image(
-                            room_id,
-                            url=image_uri,
-                            info=ImageInfo(
-                                mimetype=file['mime_type'],
-                                size=file['size'],
-                                height=file['height'],
-                                width=file['width'],
-                            ),
-                            file_name=file['name'],
-                            query_params={'ts': message['create_at']},
-                        )
-                        pass
-                    else:
-                        # Other attachments
-                        event_id = await user_api.send_file(
-                            room_id,
-                            url=image_uri,
-                            info=BaseFileInfo(
-                                mimetype=file['mime_type'],
-                                size=file['size'],
-                            ),
-                            file_name=file['name'],
-                            query_params={'ts': message['create_at']},
-                        )
-
-            # Handle reactions
-            # Specifically, react to the last event ID
-            if 'reactions' in message['metadata']:
-                for user_id, emoji, timestamp in get_reactions(message['metadata']['reactions']):
-                    reactor_mxid = await import_user(user_id)
-                    reactor_api = app_service.intent(reactor_mxid)
-                    await reactor_api.react(room_id, event_id, emoji, query_params={'ts': timestamp})
-
-            if message['is_pinned']:
-                # TODO: ensure we have permissions to pin(?)
-                await user_api.pin_message(room_id, event_id)
-        elif message['type'] == 'system_join_channel':
-            # TODO: set timestamp
-            # TODO: allow making the room public so bridged users can just join without duplicate events in the timeline
-            await user_api.ensure_joined(room_id)
-        elif message['type'] == 'system_leave_channel':
-            # TODO: set timestamp
-            await user_api.leave_room(room_id)
-        elif message['type'] == 'system_add_to_channel':
-            invited_user_id = message['props']['addedUserId']
-            invited_matrix_user = await import_user(invited_user_id)
-            invited_api = app_service.intent(invited_matrix_user)
-            await user_api.invite_user(room_id, invited_matrix_user)
-            await invited_api.ensure_joined(room_id)
-        # TODO: implement these other types
-        # elif message['type'] == 'system_remove_from_channel':
-        #     pass
-        # elif message['type'] == 'system_header_change':
-        #     pass
-        # elif message['type'] == 'system_displayname_change':
-        #     pass
-        # elif message['type'] == 'system_purpose_change':
-        #     pass
-        else:
-            print('Warning: not bridging unknown message type', message['type'], file=sys.stderr)
+        await import_message(message, room_id)
 
         # Remember most recent message in thread
         # TODO: actually use it to reply or make a thread
