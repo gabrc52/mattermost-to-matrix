@@ -1,10 +1,11 @@
 from matrix import get_app_service, config, get_alias_mxid, get_user_mxid_by_localpart
-from mautrix.types import ImageInfo, BaseFileInfo, RoomCreatePreset
+from mautrix.types import ImageInfo, BaseFileInfo, RoomCreatePreset, EventType
 import mautrix.errors
 import json
 import os
 import sys
 from import_user import import_user
+from not_in_mautrix import join_user_to_room
 import asyncio
 
 emojis: dict = json.load(open('../downloaded/emoji.json', 'r'))
@@ -188,9 +189,18 @@ async def import_message(message, room_id):
             # TODO: ensure we have permissions to pin(?)
             await user_api.pin_message(room_id, event_id)
     elif message['type'] == 'system_join_channel':
-        # TODO: set timestamp!!!!!!!!!!!!
-        # manually create a method with self.api.request
-        await user_api.ensure_joined(room_id)
+        # TODO: this should be in mautrix
+        # NOPE
+        # await user_api.ensure_joined(room_id)
+
+        # NOPE (ts not accepted there)
+        # await join_user_to_room(user_mxid, room_id, message['create_at'])
+
+        # attempt to send a m.room.member event manually and only when needed?
+        # IDK
+        await user_api.send_state_event(room_id, EventType.ALL, {
+            
+        })
     elif message['type'] == 'system_leave_channel':
         # TODO: set timestamp
         await user_api.leave_room(room_id)
