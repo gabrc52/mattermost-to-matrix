@@ -1,29 +1,23 @@
 from matrix import get_app_service
 from mautrix.api import Method, Path
+import mautrix.errors
 
-"""
-Join the user to the given room ID/alias
-at the specified time
-"""
 async def join_user_to_room(user_id, room_id, timestamp):
-    # TODO:
-    # https://spec.matrix.org/v1.7/application-service-api/#timestamp-massaging
-    # This does not actually work
-    # > Other endpoints, such as /kick, do not support ts: instead, callers can use
-    # the PUT /state endpoint to mimic the behaviour of the other APIs.
-
-
-    # Ideally, this method should not be needed.
-    # I don't want to recreate the state store so we will add
-    # the users every time
+    """
+    Join the user to the given room ID/alias
+    at the specified time
+    """
+    # Works around https://github.com/mautrix/python/issues/151
+    # In practice, mautrix accepts timestamp for leave events but not join events
     app_service = get_app_service()
     user_api = app_service.intent(user_id)
-    await user_api.api.request(
-        Method.POST,
-        # Path.v3.join[room _id],
-        Path.v3.rooms[room_id].join,
-        query_params={
-            'ts': timestamp,
-            'user_id': user_id,
-        },
-    )
+    try:
+        await user_api.api.request(
+            Method.PUT,
+            Path.v3.rooms[room_id].state['m.room.member'][user_id],
+            timestamp=timestamp,
+            content={'membership': 'join'},
+        )
+    except mautrix.errors.request.MForbidden as e:
+        # swallow "is already in the room." errors
+        pass

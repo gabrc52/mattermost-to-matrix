@@ -1,5 +1,5 @@
 from matrix import get_app_service, config, get_alias_mxid, get_user_mxid_by_localpart
-from mautrix.types import ImageInfo, BaseFileInfo, RoomCreatePreset, EventType
+from mautrix.types import ImageInfo, BaseFileInfo, RoomCreatePreset, EventType, MemberStateEventContent, Membership
 import mautrix.errors
 import json
 import os
@@ -139,7 +139,7 @@ async def import_files_in_message(message, room_id, user_api):
                     width=file['width'],
                 ),
                 file_name=file['name'],
-                query_params={'ts': message['create_at']},
+                timestamp=message['create_at'],
             )
         else:
             # Other attachments
@@ -151,7 +151,7 @@ async def import_files_in_message(message, room_id, user_api):
                     size=file['size'],
                 ),
                 file_name=file['name'],
-                query_params={'ts': message['create_at']},
+                timestamp=message['create_at'],
             )
     return event_id
 
@@ -171,7 +171,7 @@ async def import_message(message, room_id):
     if not message['type']:
         # TODO: handle markdown
         if message['message']:
-            event_id = await user_api.send_text(room_id, message['message'], query_params={'ts': message['create_at']})
+            event_id = await user_api.send_text(room_id, message['message'], timestamp=message['create_at'])
 
         # Handle media
         if 'files' in message['metadata']:
@@ -183,33 +183,36 @@ async def import_message(message, room_id):
             for user_id, emoji, timestamp in get_reactions(message['metadata']['reactions']):
                 reactor_mxid = await import_user(user_id)
                 reactor_api = app_service.intent(reactor_mxid)
-                await reactor_api.react(room_id, event_id, emoji, query_params={'ts': timestamp})
+                await reactor_api.react(room_id, event_id, emoji, timestamp=timestamp)
 
         if message['is_pinned']:
             # TODO: ensure we have permissions to pin(?)
-            await user_api.pin_message(room_id, event_id)
+            await user_api.pin_message(room_id, event_id, timestamp=message['create_at'])
     elif message['type'] == 'system_join_channel':
-        # TODO: this should be in mautrix
-        # NOPE
-        # await user_api.ensure_joined(room_id)
-
-        # NOPE (ts not accepted there)
-        # await join_user_to_room(user_mxid, room_id, message['create_at'])
-
-        # attempt to send a m.room.member event manually and only when needed?
-        # IDK
-        await user_api.send_state_event(room_id, EventType.ALL, {
-            
-        })
+        await join_user_to_room(user_mxid, room_id, timestamp=message['create_at'])
     elif message['type'] == 'system_leave_channel':
-        # TODO: set timestamp
-        await user_api.leave_room(room_id)
+        await user_api.send_state_event(
+            room_id,
+            EventType.ROOM_MEMBER,
+            MemberStateEventContent(membership=Membership.LEAVE),
+            user_mxid,
+            timestamp=message['create_at'],
+        )
     elif message['type'] == 'system_add_to_channel':
         invited_user_id = message['props']['addedUserId']
         invited_matrix_user = await import_user(invited_user_id)
         invited_api = app_service.intent(invited_matrix_user)
-        await user_api.invite_user(room_id, invited_matrix_user)
-        await invited_api.ensure_joined(room_id)
+        await user_api.send_state_event(
+            room_id,
+            EventType.ROOM_MEMBER,
+            MemberStateEventContent(
+                membership=Membership.INVITE,
+                displayname=await user_api.get_displayname(user_mxid),
+            ),
+            invited_matrix_user,
+            timestamp=message['create_at'],
+        )
+        await join_user_to_room(invited_matrix_user, room_id, timestamp=message['create_at'])
     # TODO: implement these other types
     # elif message['type'] == 'system_remove_from_channel':
     #     pass
@@ -245,3 +248,13 @@ async def import_channel(channel_id):
         # TODO: actually use it to reply or make a thread
         if message['root_id']:
             most_recent_message_in_thread[message['root_id']] = message['id']
+
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) != 2:
+        print("Usage: import_channel.py [mattermost channel ID]", file=sys.stderr)
+        print('You may get the channel ID from Mattermost ("view info") or channels.json.', file=sys.stderr)
+        exit(1)
+    channel_id = sys.argv[1]
+    asyncio.run(import_channel(channel_id))
