@@ -186,7 +186,6 @@ async def import_message(message, room_id):
                 await reactor_api.react(room_id, event_id, emoji, timestamp=timestamp)
 
         if message['is_pinned']:
-            # TODO: ensure we have permissions to pin(?)
             await user_api.pin_message(room_id, event_id, timestamp=message['create_at'])
     elif message['type'] == 'system_join_channel':
         await join_user_to_room(user_mxid, room_id, timestamp=message['create_at'])
@@ -240,7 +239,6 @@ async def import_channel(channel_id):
     room_id = await create_channel(channel_id)
 
     # Reverse cause reverse chronological order
-    # TODO: try adding all users first because mautrix does not support it
     for message in reversed(messages):
         await import_message(message, room_id)
 
