@@ -3,3 +3,5 @@ beautifulsoup4
 dataclasses-json
 mautrix
 python-magic
+markdown
+pymdown-extensions

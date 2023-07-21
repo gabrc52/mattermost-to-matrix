@@ -1,5 +1,5 @@
 from matrix import get_app_service, config, get_alias_mxid, get_user_mxid_by_localpart
-from mautrix.types import ImageInfo, BaseFileInfo, RoomCreatePreset, EventType, MemberStateEventContent, Membership
+from mautrix.types import ImageInfo, BaseFileInfo, RoomCreatePreset, EventType, MemberStateEventContent, Membership, TextMessageEventContent, MessageType, Format
 import mautrix.errors
 import json
 import os
@@ -7,6 +7,19 @@ import sys
 from import_user import import_user
 from not_in_mautrix import join_user_to_room
 import asyncio
+import markdown
+
+md = markdown.Markdown(extensions=[
+    'markdown.extensions.fenced_code',
+    'markdown.extensions.tables',
+    'markdown.extensions.nl2br',
+    'pymdownx.magiclink',
+    'pymdownx.tilde'
+], extension_configs={
+    'pymdownx.tilde': {
+        'subscript': False,
+    }
+})
 
 emojis: dict = json.load(open('../downloaded/emoji.json', 'r'))
 
@@ -169,9 +182,18 @@ async def import_message(message, room_id):
 
     # Messages without a type are normal messages
     if not message['type']:
-        # TODO: handle markdown
         if message['message']:
-            event_id = await user_api.send_text(room_id, message['message'], timestamp=message['create_at'])
+            # event_id = await user_api.send_text(room_id, message['message'], timestamp=message['create_at'])
+            event_id = await user_api.send_message(
+                room_id,
+                TextMessageEventContent(
+                    msgtype=MessageType.TEXT,
+                    body=message['message'],
+                    formatted_body=md.convert(message['message']),
+                    format=Format.HTML,
+                ),
+                timestamp=message['create_at']
+            )
 
         # Handle media
         if 'files' in message['metadata']:
