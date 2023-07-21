@@ -5,7 +5,7 @@ import json
 import os
 import sys
 from import_user import import_user
-from not_in_mautrix import join_user_to_room
+from not_in_mautrix import join_user_to_room, pin_message
 import asyncio
 import markdown
 from progress.bar import Bar
@@ -86,8 +86,10 @@ async def create_channel_from_json(channel):
                 'events': {
                     # everyone has permission to rename rooms in mattermost
                     "m.room.name": 0,
+                    # everyone has permission to pin in mattermost
+                    "m.room.pinned_events": 0,
                     # leave the rest as default (if ommitted, they are not merged into this dict,
-                    # giving everyone permission to do everything)
+                    # giving everyone permission to do everything - i think?)
                     "m.room.power_levels": 100,
                     "m.room.history_visibility": 100,
                     "m.room.canonical_alias": 50,
@@ -235,7 +237,7 @@ async def import_message(message, room_id, topic_equivalent):
                 await reactor_api.react(room_id, event_id, emoji, timestamp=timestamp)
 
         if message['is_pinned']:
-            await user_api.pin_message(room_id, event_id, timestamp=message['create_at'])
+            await pin_message(user_api, room_id, event_id, timestamp=message['create_at'])
     elif message['type'] == 'system_join_channel':
         await join_user_to_room(user_mxid, room_id, timestamp=message['create_at'])
     elif message['type'] == 'system_leave_channel':
@@ -341,7 +343,7 @@ async def import_channel(channel_id):
             bar.next()
 
     # Close the session when done
-    get_app_service().session.close()
+    await get_app_service().session.close()
 
 
 if __name__ == '__main__':

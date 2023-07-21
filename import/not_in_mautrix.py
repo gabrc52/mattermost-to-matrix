@@ -21,3 +21,16 @@ async def join_user_to_room(user_id, room_id, timestamp):
     except mautrix.errors.request.MForbidden as e:
         # swallow "is already in the room." errors
         pass
+
+# TODO: contribute to mautrix so this allows timestamp
+# all you need is to add *kwargs to pin_message
+async def pin_message(user_api, room_id, event_id, timestamp):
+    """
+    pin_message but it supports timestamp massaging
+    """
+    # copied and pasted from pin_message in intent.py except I actually pass
+    # in the timestamp
+    events = await user_api.get_pinned_messages(room_id)
+    if event_id not in events:
+        events.append(event_id)
+        await user_api.set_pinned_messages(room_id, events, timestamp=timestamp)
