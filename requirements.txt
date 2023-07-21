@@ -5,3 +5,4 @@ mautrix
 python-magic
 markdown
 pymdown-extensions
+progress

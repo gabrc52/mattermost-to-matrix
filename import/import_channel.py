@@ -8,6 +8,7 @@ from import_user import import_user
 from not_in_mautrix import join_user_to_room
 import asyncio
 import markdown
+from progress.bar import Bar
 
 md = markdown.Markdown(extensions=[
     'markdown.extensions.fenced_code',
@@ -53,12 +54,11 @@ async def room_exists(room_alias):
         return False
 
 
-async def create_channel(channel_id):
+async def create_channel_from_json(channel):
     """
-    Create a Mattermost channel (with given `channel_id`) into a Matrix room.
+    Creates a Mattermost channel with the given channel JSON into a Matrix room.
     Returns the room ID on Matrix
     """
-    channel = get_mattermost_channel(channel_id)
     # TODO: do something like _mattermost_sipb_uplink (add team too)
     # but make it configureable
     alias_localpart = config.matrix.room_prefix + channel['name']
@@ -111,6 +111,15 @@ async def create_channel(channel_id):
         await api.invite_user(room_id, user)
 
     return room_id
+
+
+async def create_channel(channel):
+    """
+    Create a Mattermost channel (with given `channel_id`) into a Matrix room.
+    Returns the room ID on Matrix
+    """
+    channel = get_mattermost_channel(channel_id)
+    return await create_channel_from_json(channel)
 
 
 most_recent_message_in_thread = {}
@@ -306,7 +315,8 @@ async def import_channel(channel_id):
         exit(1)
     messages = json.load(open(filename, 'r'))
 
-    room_id = await create_channel(channel_id)
+    channel = get_mattermost_channel(channel_id)
+    room_id = await create_channel_from_json(channel)
 
     # If we chose "auto" for topic changes, choose just one to bridge
     topic_equivalent = config.mattermost.backfill_topic_equivalent
@@ -319,13 +329,19 @@ async def import_channel(channel_id):
             topic_equivalent = 'header'
 
     # Reverse cause reverse chronological order
-    for message in reversed(messages):
-        await import_message(message, room_id, topic_equivalent)
+    with Bar(f"Importing {channel['name']}", max=len(messages)) as bar:
+        for message in reversed(messages):
+            await import_message(message, room_id, topic_equivalent)
 
-        # Remember most recent message in thread
-        # TODO: actually use it to reply or make a thread
-        if message['root_id']:
-            most_recent_message_in_thread[message['root_id']] = message['id']
+            # Remember most recent message in thread
+            # TODO: actually use it to reply or make a thread
+            if message['root_id']:
+                most_recent_message_in_thread[message['root_id']] = message['id']
+            
+            bar.next()
+
+    # Close the session when done
+    get_app_service().session.close()
 
 
 if __name__ == '__main__':
