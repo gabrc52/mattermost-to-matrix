@@ -1,5 +1,5 @@
 import yaml
-from typing import Optional
+from typing import Literal, Optional
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 
@@ -37,6 +37,14 @@ class MattermostConfig:
     username: str
     password: str
     instance: str
+
+    # What to backfill as a Matrix "topic".
+    # * header: backfill only header changes as topic changes
+    # * purpose: backfill only purpose changes as topic changes
+    # * both: backfill both header changes and purpose changes as topic changes
+    # * auto: backfill header changes as topic changes only if the channel does not
+    #         have any purpose changes, and purpose changes otherwise
+    backfill_topic_equivalent: Literal["header"] | Literal["purpose"] | Literal["both"] | Literal["auto"]
 
     # Channel IDs to skip exporting
     skip_channels: tuple[str] = ()

@@ -1,5 +1,5 @@
 from matrix import get_app_service, config, get_alias_mxid, get_user_mxid_by_localpart
-from mautrix.types import ImageInfo, BaseFileInfo, RoomCreatePreset, EventType, MemberStateEventContent, Membership, TextMessageEventContent, MessageType, Format
+from mautrix.types import ImageInfo, BaseFileInfo, RoomCreatePreset, EventType, MemberStateEventContent, Membership, TextMessageEventContent, MessageType, Format, RoomNameStateEventContent, RoomTopicStateEventContent
 import mautrix.errors
 import json
 import os
@@ -83,9 +83,24 @@ async def create_channel(channel_id):
             alias_localpart=alias_localpart,
             name=channel['display_name'],
             power_level_override={
+                'events': {
+                    # everyone has permission to rename rooms in mattermost
+                    "m.room.name": 0,
+                    # leave the rest as default (if ommitted, they are not merged into this dict,
+                    # giving everyone permission to do everything)
+                    "m.room.power_levels": 100,
+                    "m.room.history_visibility": 100,
+                    "m.room.canonical_alias": 50,
+                    "m.room.avatar": 50,
+                    "m.room.tombstone": 100,
+                    "m.room.server_acl": 100,
+                    "m.room.encryption": 100
+                },
+                # everyone can invite
+                'invite': 0,
                 'users': {user: 100 for user in config.matrix.users}               # As per config
                        | {get_user_mxid_by_localpart(config.matrix.username): 100} # Make ourselves admin
-                       | {user_api.mxid: 100}                                      # Make creator admin
+                       | {user_api.mxid: 100},                                     # Make creator admin
             },
         )
         # Invite bot user if needed
@@ -169,10 +184,13 @@ async def import_files_in_message(message, room_id, user_api):
     return event_id
 
 
-async def import_message(message, room_id):
+async def import_message(message, room_id, topic_equivalent):
     """
     Import a specific message from the Mattermost JSON format
     into the specified room ID
+
+    topic_equivalent can be header, purpose or both, for what to treat
+    as a Matrix topic
     """
     app_service = get_app_service()
     api = app_service.bot_intent()
@@ -223,26 +241,56 @@ async def import_message(message, room_id):
         invited_user_id = message['props']['addedUserId']
         invited_matrix_user = await import_user(invited_user_id)
         invited_api = app_service.intent(invited_matrix_user)
+        try:
+            await user_api.send_state_event(
+                room_id,
+                EventType.ROOM_MEMBER,
+                MemberStateEventContent(
+                    membership=Membership.INVITE,
+                    displayname=await user_api.get_displayname(user_mxid),
+                ),
+                invited_matrix_user,
+                timestamp=message['create_at'],
+            )
+        except mautrix.errors.request.MForbidden:
+            # ignore exception if you try to invite someone already in the room
+            pass
+        await join_user_to_room(invited_matrix_user, room_id, timestamp=message['create_at'])
+    elif message['type'] == 'system_remove_from_channel':
+        removed_user_id = message['props']['removedUserId']
+        removed_matrix_user = await import_user(removed_user_id)
         await user_api.send_state_event(
             room_id,
             EventType.ROOM_MEMBER,
             MemberStateEventContent(
-                membership=Membership.INVITE,
-                displayname=await user_api.get_displayname(user_mxid),
+                membership=Membership.LEAVE
             ),
-            invited_matrix_user,
+            removed_matrix_user,
             timestamp=message['create_at'],
         )
-        await join_user_to_room(invited_matrix_user, room_id, timestamp=message['create_at'])
-    # TODO: implement these other types
-    # elif message['type'] == 'system_remove_from_channel':
-    #     pass
-    # elif message['type'] == 'system_header_change':
-    #     pass
-    # elif message['type'] == 'system_displayname_change':
-    #     pass
-    # elif message['type'] == 'system_purpose_change':
-    #     pass
+    elif message['type'] == 'system_displayname_change':
+        await user_api.send_state_event(
+            room_id,
+            EventType.ROOM_NAME,
+            RoomNameStateEventContent(name=message['props']['new_displayname']),
+            timestamp=message['create_at'],
+        )
+    elif message['type'] == 'system_header_change':
+        if topic_equivalent in ('header', 'both'):
+            await user_api.send_state_event(
+                room_id,
+                EventType.ROOM_TOPIC,
+                RoomTopicStateEventContent(topic=message['props']['new_header']),
+                timestamp=message['create_at'],
+            )
+    elif message['type'] == 'system_purpose_change':
+        if topic_equivalent in ('purpose', 'both'):
+            await user_api.send_state_event(
+                room_id,
+                EventType.ROOM_TOPIC,
+                RoomTopicStateEventContent(topic=message['props']['new_purpose']),
+                timestamp=message['create_at']
+            )
     else:
         print('Warning: not bridging unknown message type', message['type'], file=sys.stderr)
 
@@ -260,9 +308,19 @@ async def import_channel(channel_id):
 
     room_id = await create_channel(channel_id)
 
+    # If we chose "auto" for topic changes, choose just one to bridge
+    topic_equivalent = config.mattermost.backfill_topic_equivalent
+    if topic_equivalent == 'both':
+        # Prefer purpose if there is at least one purpose change
+        if any(message['type'] == 'system_purpose_change' for message in messages):
+            topic_equivalent = 'purpose'
+        # Otherwise, use the header change
+        else:
+            topic_equivalent = 'header'
+
     # Reverse cause reverse chronological order
     for message in reversed(messages):
-        await import_message(message, room_id)
+        await import_message(message, room_id, topic_equivalent)
 
         # Remember most recent message in thread
         # TODO: actually use it to reply or make a thread

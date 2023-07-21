@@ -6,6 +6,13 @@ mattermost:
   # skip_channels:
   #   - "po9ucmm6wirjbnc3irjybc333y"
 
+  # What to backfill as a Matrix "topic". Accepted options are 'header' or 'purpose'
+  # to use those Mattermost fields, 'both' to treat either header changes or purpose
+  # changes as topic changes, or 'auto' to choose only one of them depending on what
+  # events the channel has.
+  backfill_topic_equivalent: auto
+
+
 matrix:
   # See https://spec.matrix.org/v1.6/application-service-api/#registration
   hs_token: Please generate one with pwgen -s 64 1
