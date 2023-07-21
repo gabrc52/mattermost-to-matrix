@@ -1,13 +1,15 @@
-from mautrix.appservice import AppService, AppServiceAPI, state_store
-from mautrix.types import UserID, RoomID
-from mautrix.util.logging import TraceLogger
 import asyncio
-
+import os
 # Import config from parent directory
 # TODO: use an actual module?
 # source: https://stackoverflow.com/questions/16780014/import-file-from-parent-directory
 import sys
-import os
+
+import mautrix.errors
+from mautrix.appservice import AppService, AppServiceAPI, state_store
+from mautrix.types import RoomID, UserID
+from mautrix.util.logging import TraceLogger
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import config
 
@@ -53,3 +55,16 @@ def get_alias_mxid(localpart):
     Given the localpart of a room alias, return the full MXID
     """
     return f'#{localpart}:{config.matrix.homeserver}'
+
+
+async def room_exists(room_alias):
+    """
+    Does the room with the given alias exist?
+    """
+    app_service = get_app_service()
+    api = app_service.bot_intent()
+    try:
+        alias_info = await api.resolve_room_alias(room_alias)
+        return True
+    except mautrix.errors.request.MNotFound:
+        return False
