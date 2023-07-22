@@ -116,7 +116,7 @@ async def import_channel(channel_id):
 
     # If we chose "auto" for topic changes, choose just one to bridge
     topic_equivalent = config.mattermost.backfill_topic_equivalent
-    if topic_equivalent == 'both':
+    if topic_equivalent == 'auto':
         # Prefer purpose if there is at least one purpose change
         if any(message['type'] == 'system_purpose_change' for message in messages):
             topic_equivalent = 'purpose'
