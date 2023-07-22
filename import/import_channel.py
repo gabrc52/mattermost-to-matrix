@@ -15,7 +15,7 @@ if not os.path.exists('../downloaded/channels.json'):
     print(f'channels.json not found! Run export_channel_list.py first.', file=sys.stderr)
     exit(1)
 channels = json.load(open('../downloaded/channels.json', 'r'))
-
+teams = json.load(open('../downloaded/teams.json', 'r'))
 
 def get_mattermost_channel(channel_id):
     """
@@ -28,15 +28,23 @@ def get_mattermost_channel(channel_id):
     return results[0]
 
 
+def get_alias_localpart(channel):
+    """
+    Given a Mattermost channel (JSON), get the localpart
+    of the Matrix alias to it
+    """
+    # perhaps this is where we can add a configuration option to omit the
+    # team name
+    team = [team for team in teams if team['id'] == channel['team_id']][0]
+    return f"{config.matrix.room_prefix}{team['name']}_{channel['name']}"
+
+
 async def create_channel_from_json(channel):
     """
     Creates a Mattermost channel with the given channel JSON into a Matrix room.
     Returns the room ID on Matrix
     """
-    # TODO: do something like _mattermost_sipb_uplink (add team too)
-    # but make it configureable
-    alias_localpart = config.matrix.room_prefix + channel['name']
-
+    alias_localpart = get_alias_localpart(channel)
     app_service = get_app_service()
     api = app_service.bot_intent()
 
