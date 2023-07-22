@@ -120,9 +120,15 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
     user_api = app_service.intent(user_mxid)
 
     # Messages without a type are normal messages
-    if not message['type']:
+    if not message['type'] or message['type'] == 'slack_attachment':
+        # get event IDs of reply/thread if needed
+        if message['root_id']:
+            mattermost_reply_to = state.most_recent_message_in_thread.get(message['root_id']) or message['root_id']
+            matrix_thread_root = state.matrix_event_id[message['root_id']]
+            matrix_reply_to = state.matrix_event_id[mattermost_reply_to]
+            state.most_recent_message_in_thread[message['root_id']] = message['id']
+        
         if message['message']:
-            # event_id = await user_api.send_text(room_id, message['message'], timestamp=message['create_at'])
             content = TextMessageEventContent(
                 msgtype=MessageType.TEXT,
                 body=message['message'],
@@ -130,16 +136,11 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
                 format=Format.HTML,
             )
             # set reply if needed
-            if message['root_id']:
-                # this may need some 6.102ing (encapsulation / protect the rep)
-                mattermost_reply_to = state.most_recent_message_in_thread.get(message['root_id']) or message['root_id']
-                matrix_thread_root = state.matrix_event_id[message['root_id']]
-                matrix_reply_to = state.matrix_event_id[mattermost_reply_to]
+            if message['root_id']:                
                 if thread_equivalent == 'reply':
                     content.set_reply(matrix_reply_to)
                 else:
                     content.set_thread_parent(thread_parent=matrix_thread_root, last_event_in_thread=matrix_reply_to)
-                state.most_recent_message_in_thread[message['root_id']] = message['id']
             # send message
             event_id = await user_api.send_message(
                 room_id,
@@ -147,9 +148,26 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
                 timestamp=message['create_at']
             )
 
-        # Handle media
+        # Handle media (TODO: use replies/threads appropriately)
         if 'files' in message['metadata']:
             event_id = await import_files_in_message(message, room_id, user_api)
+
+        # Handle Slack attachments
+        if message['type'] == 'slack_attachment' and (message.get('props') or {}).get('attachments'):
+            print('Warning: Slack-type messages are not fully supported. Send an issue/PR if you want better support.', file=sys.stderr)
+            for attachment in message['props']['attachments']:
+                event_id = await user_api.send_message(
+                    room_id,
+                    TextMessageEventContent(
+                        msgtype=MessageType.TEXT,
+                        # as you can see, we are using the "text" but ignoring all the other attributes
+                        # (this is why they're partially supported at the moment)
+                        body=attachment['text'],
+                        formatted_body=f"<pre><code>{attachment['text']}</code></pre>",
+                        format=Format.HTML,
+                    ),
+                    timestamp=message['create_at'],
+                )
 
         # store event ID
         state.matrix_event_id[message['id']] = event_id
