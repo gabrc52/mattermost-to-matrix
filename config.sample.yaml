@@ -6,11 +6,23 @@ mattermost:
   # skip_channels:
   #   - "po9ucmm6wirjbnc3irjybc333y"
 
-  # What to backfill as a Matrix "topic". Accepted options are 'header' or 'purpose'
-  # to use those Mattermost fields, 'both' to treat either header changes or purpose
-  # changes as topic changes, or 'auto' to choose only one of them depending on what
-  # events the channel has.
-  backfill_topic_equivalent: auto
+  backfill:
+    # What to backfill as a Matrix "topic". Accepted options are 'header' or 'purpose'
+    # to use those Mattermost fields, 'both' to treat either header changes or purpose
+    # changes as topic changes, or 'auto' to choose only one of them depending on what
+    # events the channel has.
+    topic_equivalent: auto
+
+    # Given that Mattermost does not have a separate concept of "reply" and "thread",
+    # you can configure how to backfill them. Accepted options are 'reply' to bridge
+    # them to Matrix as replies to the latest message in the Mattermost thread, 'thread'
+    # to bridge Mattermost threads as Matrix threads, and 'auto' to bridge them as replies
+    # if the thread is small enough
+    thread_equivalent: auto
+
+    # If you chose 'auto', what is the minimum number of messages to use a thread instead
+    # of replies?
+    # thread_threshold: 3
 
 
 matrix:

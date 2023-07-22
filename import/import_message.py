@@ -94,7 +94,7 @@ async def import_files_in_message(message, room_id, user_api):
     return event_id
 
 
-async def import_message(message, room_id, topic_equivalent, state: MessageState):
+async def import_message(message, room_id, topic_equivalent, state: MessageState, thread_sizes = None):
     """
     Import a specific message from the Mattermost JSON format
     into the specified room ID
@@ -102,6 +102,17 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
     topic_equivalent can be header, purpose or both, for what to treat
     as a Matrix topic
     """
+    # Process / validate some options related to backfilling
+    assert topic_equivalent in ('header', 'purpose', 'both')
+    thread_equivalent = config.mattermost.backfill.thread_equivalent
+    if thread_equivalent == 'auto' and message['root_id']:
+        assert thread_sizes is not None
+        if thread_sizes[message['root_id']] >= config.mattermost.backfill.thread_threshold:
+            thread_equivalent = 'thread'
+        else:
+            thread_equivalent = 'reply'
+        assert thread_equivalent in ('thread', 'reply')
+
     app_service = get_app_service()
     api = app_service.bot_intent()
 
@@ -120,10 +131,14 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
             )
             # set reply if needed
             if message['root_id']:
-                # this needs some 6.102ing (encapsulation / protect the rep)
+                # this may need some 6.102ing (encapsulation / protect the rep)
                 mattermost_reply_to = state.most_recent_message_in_thread.get(message['root_id']) or message['root_id']
+                matrix_thread_root = state.matrix_event_id[message['root_id']]
                 matrix_reply_to = state.matrix_event_id[mattermost_reply_to]
-                content.set_reply(matrix_reply_to)
+                if thread_equivalent == 'reply':
+                    content.set_reply(matrix_reply_to)
+                else:
+                    content.set_thread_parent(thread_parent=matrix_thread_root, last_event_in_thread=matrix_reply_to)
                 state.most_recent_message_in_thread[message['root_id']] = message['id']
             # send message
             event_id = await user_api.send_message(
