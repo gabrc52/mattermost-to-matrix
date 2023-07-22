@@ -25,12 +25,4 @@ registration = {
     "url": None,
 }
 
-# MIT-specific functionality: Claim Zephyr namespace as well to allow puppeting them
-# It's safe to hardcode since https://github.com/sipb/mm2zephyr is only used for 
-# MIT+SIPB+Zephyr+Mattermost
-if "mit.edu" in config.matrix.homeserver:
-    registration["namespaces"]["users"].append(
-        {"exclusive": False, "regex": "@_zephyr_.+"}
-    )
-
 yaml.dump(registration, open("registration.yaml", "w"), yaml.Dumper)
