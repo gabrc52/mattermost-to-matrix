@@ -61,6 +61,8 @@ async def create_channel_from_json(channel):
                     "m.room.name": 0,
                     # everyone has permission to pin in mattermost
                     "m.room.pinned_events": 0,
+                    # everyone has permission to change the topic
+                    "m.room.topic": 0,
                     # leave the rest as default (if ommitted, they are not merged into this dict,
                     # giving everyone permission to do everything - i think?)
                     "m.room.power_levels": 100,
