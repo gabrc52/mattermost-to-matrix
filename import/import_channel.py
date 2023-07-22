@@ -8,6 +8,7 @@ from import_user import import_user
 from matrix import (config, get_alias_mxid, get_app_service,
                     get_user_mxid_by_localpart, room_exists)
 from mautrix.types import RoomCreatePreset
+from message_state import MessageState
 from progress.bar import Bar
 
 if not os.path.exists('../downloaded/channels.json'):
@@ -99,14 +100,13 @@ async def create_channel(channel):
     return await create_channel_from_json(channel)
 
 
-most_recent_message_in_thread = {}
-
 
 async def import_channel(channel_id):
     """
     Imports the entire Mattermost channel with given ID into a Matrix channel,
     and adds the users chosen in the config and makes them admin
     """
+    state = MessageState()
     filename = f'../downloaded/messages/{channel_id}.json'
     if not os.path.exists(filename):
         print(f'File does not exist for {channel_id}. Run export_channel.py first.', file=sys.stderr)
@@ -129,12 +129,7 @@ async def import_channel(channel_id):
     # Reverse cause reverse chronological order
     with Bar(f"Importing {channel['name']}", max=len(messages)) as bar:
         for message in reversed(messages):
-            await import_message(message, room_id, topic_equivalent)
-
-            # Remember most recent message in thread
-            # TODO: actually use it to reply or make a thread
-            if message['root_id']:
-                most_recent_message_in_thread[message['root_id']] = message['id']
+            await import_message(message, room_id, topic_equivalent, state)
             
             bar.next()
 

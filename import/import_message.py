@@ -9,6 +9,7 @@ from mautrix.types import (BaseFileInfo, EventType, Format, ImageInfo,
                            Membership, MemberStateEventContent, MessageType,
                            RoomNameStateEventContent,
                            RoomTopicStateEventContent, TextMessageEventContent)
+from message_state import MessageState
 from not_in_mautrix import join_user_to_room, pin_message
 
 emojis: dict = json.load(open('../downloaded/emoji.json', 'r'))
@@ -93,7 +94,7 @@ async def import_files_in_message(message, room_id, user_api):
     return event_id
 
 
-async def import_message(message, room_id, topic_equivalent):
+async def import_message(message, room_id, topic_equivalent, state: MessageState):
     """
     Import a specific message from the Mattermost JSON format
     into the specified room ID
@@ -111,20 +112,32 @@ async def import_message(message, room_id, topic_equivalent):
     if not message['type']:
         if message['message']:
             # event_id = await user_api.send_text(room_id, message['message'], timestamp=message['create_at'])
+            content = TextMessageEventContent(
+                msgtype=MessageType.TEXT,
+                body=message['message'],
+                formatted_body=md.convert(message['message']),
+                format=Format.HTML,
+            )
+            # set reply if needed
+            if message['root_id']:
+                # this needs some 6.102ing (encapsulation / protect the rep)
+                mattermost_reply_to = state.most_recent_message_in_thread.get(message['root_id']) or message['root_id']
+                matrix_reply_to = state.matrix_event_id[mattermost_reply_to]
+                content.set_reply(matrix_reply_to)
+                state.most_recent_message_in_thread[message['root_id']] = message['id']
+            # send message
             event_id = await user_api.send_message(
                 room_id,
-                TextMessageEventContent(
-                    msgtype=MessageType.TEXT,
-                    body=message['message'],
-                    formatted_body=md.convert(message['message']),
-                    format=Format.HTML,
-                ),
+                content,
                 timestamp=message['create_at']
             )
 
         # Handle media
         if 'files' in message['metadata']:
             event_id = await import_files_in_message(message, room_id, user_api)
+
+        # store event ID
+        state.matrix_event_id[message['id']] = event_id
 
         # Handle reactions
         # Specifically, react to the last event ID
