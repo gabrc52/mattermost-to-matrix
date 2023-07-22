@@ -1,7 +1,5 @@
 # Some docs about Mattermost
 
-***Important note: The Mattermost server I am running this on has an outdated version of Mattermost, so things may differ for you.***
-
 Here is some documentation on the way the Mattermost JSON payloads for messages are formed.
 
 This is based on observation (because there does not seem to be a useful mattermost spec for a lot of this).
