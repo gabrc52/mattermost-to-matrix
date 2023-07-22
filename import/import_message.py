@@ -3,8 +3,8 @@ import sys
 
 import markdown
 import mautrix.errors
-from import_user import import_user
-from matrix import config, get_app_service
+from import_user import create_user, import_user
+from matrix import config, get_app_service, get_bridged_user_mxid
 from mautrix.types import (BaseFileInfo, BaseMessageEventContent, EventType,
                            Format, ImageInfo, MediaMessageEventContent,
                            Membership, MemberStateEventContent, MessageType,
@@ -75,8 +75,20 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
     app_service = get_app_service()
     api = app_service.bot_intent()
 
-    # TODO: honor from_webhook, from_bot, override_username, webhook_display_name(?)
-    user_mxid = await import_user(message['user_id'])
+    # Respect request to override username
+    if 'override_username' in message['props']:
+        username = message['props']['override_username']
+        # TODO: use username if force_username is true in config
+        display_name = message['props'].get('webhook_display_name') or username
+        user_mxid = get_bridged_user_mxid(username)
+        # TODO: set the avatar, perhaps a hardcoded one, or the pfp of the account itself
+        # if it really is a bot...
+        # note that even mattermost itself uses the pfp of the user who created the webhook
+        # if "Enable integrations to override profile picture icons" is disabled
+        await create_user(user_mxid, display_name)
+    else:
+        user_mxid = await import_user(message['user_id'])
+        
     user_api = app_service.intent(user_mxid)
 
     # Messages without a type are normal messages
