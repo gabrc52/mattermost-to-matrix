@@ -196,7 +196,7 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
     elif message['type'] == 'system_remove_from_channel':
         removed_user_id = message['props']['removedUserId']
         removed_matrix_user = await import_user(removed_user_id)
-        await user_api.send_state_event(
+        kick = lambda api: api.send_state_event(
             room_id,
             EventType.ROOM_MEMBER,
             MemberStateEventContent(
@@ -205,6 +205,11 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
             removed_matrix_user,
             timestamp=message['create_at'],
         )
+        try:
+            await kick(user_api)
+        except mautrix.errors.request.MForbidden:
+            # kick using app service account if ghost does not have enough permissions
+            await kick(api)
     elif message['type'] == 'system_displayname_change':
         await user_api.send_state_event(
             room_id,
