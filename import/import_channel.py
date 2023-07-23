@@ -58,8 +58,11 @@ async def create_channel_from_json(channel):
 
     # If it doesn't exist, create it
     if not already_exists:
-        creator_mxid = await import_user(channel['creator_id'])
-        user_api = app_service.intent(creator_mxid)
+        if channel['creator_id']:
+            creator_mxid = await import_user(channel['creator_id'])
+            user_api = app_service.intent(creator_mxid)
+        else:
+            user_api = app_service.bot_intent()
         room_id = await user_api.create_room(
             preset=RoomCreatePreset.PUBLIC,
             alias_localpart=alias_localpart,
