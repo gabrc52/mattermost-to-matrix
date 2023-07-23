@@ -15,7 +15,15 @@ from not_in_mautrix import join_user_to_room, pin_message
 
 emojis: dict = json.load(open('../downloaded/emoji.json', 'r'))
 
-md = markdown.Markdown(extensions=[
+# https://stackoverflow.com/a/70921001/5031798
+# Remove <p> tags which don't play with Element Android
+class EMarkdown(markdown.Markdown):
+    def convert(self, text):
+        t = super().convert(text)
+        t = t.removeprefix("<p>").removesuffix("</p>")
+        return t
+
+md = EMarkdown(extensions=[
     'markdown.extensions.fenced_code',
     'markdown.extensions.tables',
     'markdown.extensions.nl2br',
