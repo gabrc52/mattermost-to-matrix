@@ -30,7 +30,8 @@ async def create_space_for_team(team):
     app_service = get_app_service()
     api = app_service.bot_intent()
     api.get_room_avatar_url
-    # TODO: icon
+    
+    # Create the space (room) (if it doesn't already exist)
     room_mxid = await create_room(
         alias_localpart=get_team_alias_localpart(team['name']),
         name=team['display_name'],
