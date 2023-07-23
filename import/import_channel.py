@@ -117,6 +117,7 @@ async def create_channel_from_json(channel):
     }
     # Make creator admin
     if creator_mxid:
+        power_level_override.setdefault('users', {})
         power_level_override['users'] |= {creator_mxid: 100}
     return await create_room(
         alias_localpart=alias_localpart,
@@ -179,6 +180,8 @@ async def import_channel(channel_id):
             await import_message(message, room_id, topic_equivalent, state, thread_sizes)
             
             bar.next()
+
+    return room_id
 
 
 if __name__ == '__main__':

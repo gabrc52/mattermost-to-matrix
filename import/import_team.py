@@ -1,9 +1,9 @@
 import asyncio
 import os
 import magic
-from import_channel import import_channel, channels, teams, create_room
+from import_channel import channels, teams, create_room, import_channel
 from matrix import get_app_service, config, get_room_avatar, set_room_avatar
-from mautrix.types import RoomCreateStateEventContent, RoomType, RoomCreatePreset, EventType, RoomAvatarStateEventContent
+from mautrix.types import RoomCreateStateEventContent, RoomType, RoomCreatePreset, EventType, SpaceChildStateEventContent, SpaceParentStateEventContent
 
 def get_team_by_name(team_name):
     """
@@ -22,6 +22,7 @@ def get_channels_by_team(team_id):
 def get_team_alias_localpart(team_name):
     return config.matrix.room_prefix + team_name
 
+
 async def create_space_for_team(team):
     """
     Given a team JSON, create its space on Matrix, and invite the list of users
@@ -29,7 +30,6 @@ async def create_space_for_team(team):
     """
     app_service = get_app_service()
     api = app_service.bot_intent()
-    api.get_room_avatar_url
     
     # Create the space (room) (if it doesn't already exist)
     room_mxid = await create_room(
@@ -37,6 +37,7 @@ async def create_space_for_team(team):
         name=team['display_name'],
         creation_content=RoomCreateStateEventContent(type=RoomType.SPACE),
         preset=RoomCreatePreset.PUBLIC,
+        topic=team['description'],
     )
 
     # Set avatar if not set
@@ -60,8 +61,17 @@ async def import_team(team_name):
     Import a Mattermost team by name. Currently only imports public
     channels.
     """
+    app_service = get_app_service()
+    api = app_service.bot_intent()
+
     team = get_team_by_name(team_name)
-    await create_space_for_team(team)
+    team_id = await create_space_for_team(team)
     channels = get_channels_by_team(team['id'])
 
+    # spec on spaces: https://spec.matrix.org/v1.7/client-server-api/#spaces
+
+    for channel in channels:
+        room_id = await import_channel(channel['id'])
+        await api.send_state_event(team_id, EventType.SPACE_CHILD, SpaceChildStateEventContent(via=[config.matrix.homeserver]), room_id)
+        await api.send_state_event(room_id, EventType.SPACE_PARENT, SpaceParentStateEventContent(via=[config.matrix.homeserver]), team_id)
 
