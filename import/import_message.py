@@ -264,5 +264,10 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
                 RoomTopicStateEventContent(topic=message['props']['new_purpose']),
                 timestamp=message['create_at']
             )
+    elif message['type'] in ('system_join_team', 'system_leave_team'):
+        # ignore team joins/leaves, they're unnecessary spam
+        # (they _could_ be bridged into space-room joins/leaves but, why.)
+        # PRs welcome if you disagree
+        pass
     else:
         print('Warning: not bridging unknown message type', message['type'], file=sys.stderr)
