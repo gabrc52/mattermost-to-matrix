@@ -41,6 +41,11 @@ matrix:
     - "@admin:example.com"
     - "@neo:example.com"
 
+  # Whether to skip already existing rooms when importing
+  # Change this to allow using rooms that you created, with the caveat that if you
+  # run the import scripts twice, it will import all messages twice.
+  skip_existing: true
+
   # Prefix to use for aliases; uncomment to change
   # room_prefix: _mattermost_
 

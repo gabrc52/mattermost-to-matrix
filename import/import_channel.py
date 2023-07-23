@@ -43,7 +43,8 @@ async def create_room(alias_localpart, power_level_override: dict=None, creator_
     """
     Creates a Matrix room with the given properties, and invites and makes admin the
     specified people in the config. Returns the room ID of the newly created room or 
-    the already existing room, if it already exists.
+    the already existing room, if it already exists, and whether the channel has just
+    been created, as a tuple.
     Accepted kwargs include:
     * name
     * power_level_override
@@ -84,7 +85,7 @@ async def create_room(alias_localpart, power_level_override: dict=None, creator_
     for user in config.matrix.users:
         await api.invite_user(room_id, user)
 
-    return room_id
+    return room_id, already_exists
 
 
 async def create_channel_from_json(channel):
@@ -152,7 +153,7 @@ async def import_channel(channel_id):
     messages = json.load(open(filename, 'r'))
 
     channel = get_mattermost_channel(channel_id)
-    room_id = await create_channel_from_json(channel)
+    room_id, already_existed = await create_channel_from_json(channel)
 
     # If we chose "auto" for topic changes, choose just one to bridge
     topic_equivalent = config.mattermost.backfill.topic_equivalent
@@ -175,11 +176,14 @@ async def import_channel(channel_id):
                 del thread_sizes[message['id']]
 
     # Reverse cause reverse chronological order
-    with Bar(f"Importing {channel['name']}", max=len(messages)) as bar:
-        for message in reversed(messages):
-            await import_message(message, room_id, topic_equivalent, state, thread_sizes)
-            
-            bar.next()
+    if already_existed and config.matrix.skip_existing:
+        print(f'Skipping import of already existing channel "{channel["display_name"]}"')
+    else:
+        with Bar(f"Importing {channel['name']}", max=len(messages)) as bar:
+            for message in reversed(messages):
+                await import_message(message, room_id, topic_equivalent, state, thread_sizes)
+                
+                bar.next()
 
     return room_id
 
