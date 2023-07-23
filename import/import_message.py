@@ -105,19 +105,23 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
     # Messages without a type are normal messages
     if not message['type'] or message['type'] == 'slack_attachment':
         # get event IDs of reply/thread if needed
-        if message['root_id']:
+        # the second condition is needed because malfunctioning bots may reply to a "System message"
+        # which is not actually a message
+        if message['root_id'] and message['root_id'] in state.matrix_event_id:
             mattermost_reply_to = state.most_recent_message_in_thread.get(message['root_id']) or message['root_id']
             matrix_thread_root = state.matrix_event_id[message['root_id']]
             matrix_reply_to = state.matrix_event_id[mattermost_reply_to]
             state.most_recent_message_in_thread[message['root_id']] = message['id']
-        
-        def set_reply_or_thread(content: BaseMessageEventContent):
-            if message['root_id']:                
+
+            def set_reply_or_thread(content: BaseMessageEventContent):
                 if thread_equivalent == 'reply':
                     content.set_reply(matrix_reply_to)
                 else:
                     content.set_thread_parent(thread_parent=matrix_thread_root, last_event_in_thread=matrix_reply_to)
-
+        else:
+            def set_reply_or_thread(_):
+                pass
+        
         # Handle (rich) text messages
         if message['message']:
             content = TextMessageEventContent(
