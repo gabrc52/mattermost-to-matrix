@@ -81,6 +81,9 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
         # TODO: use username if force_username is true in config
         display_name = message['props'].get('webhook_display_name') or username
         user_mxid = get_bridged_user_mxid(username)
+        # Apply a custom prefix if using Zephyr (MIT-specific functionality)
+        if 'from_zephyr' in message['props']:
+            user_mxid = user_mxid.replace(config.matrix.user_prefix, '_zephyr_')
         # TODO: set the avatar, perhaps a hardcoded one, or the pfp of the account itself
         # if it really is a bot...
         # note that even mattermost itself uses the pfp of the user who created the webhook
