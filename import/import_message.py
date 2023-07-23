@@ -264,7 +264,7 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
                 RoomTopicStateEventContent(topic=message['props']['new_purpose']),
                 timestamp=message['create_at']
             )
-    elif message['type'] in ('system_join_team', 'system_leave_team'):
+    elif message['type'] in ('system_join_team', 'system_leave_team', 'system_add_to_team', 'system_remove_from_team'):
         # ignore team joins/leaves, they're unnecessary spam
         # (they _could_ be bridged into space-room joins/leaves but, why.)
         # PRs welcome if you disagree
