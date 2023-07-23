@@ -39,7 +39,7 @@ def get_alias_localpart(channel):
     return f"{config.matrix.room_prefix}{team['name']}_{channel['name']}"
 
 
-async def create_room(alias_localpart, creator_mxid=None, **kwargs):
+async def create_room(alias_localpart, power_level_override: dict=None, creator_mxid=None, **kwargs):
     """
     Creates a Matrix room with the given properties, and invites and makes admin the
     specified people in the config. Returns the room ID of the newly created room or 
@@ -62,11 +62,21 @@ async def create_room(alias_localpart, creator_mxid=None, **kwargs):
 
     # If it doesn't exist, create it
     if not already_exists:
+        # Make everyone in config admin
+        if not power_level_override: power_level_override = {}
+        power_level_override.setdefault('users', {})
+        power_level_override['users'] |= \
+            {user: 100 for user in config.matrix.users} | \
+            {get_user_mxid_by_localpart(config.matrix.username): 100} # plus the bot account ofc
         if creator_mxid:
             user_api = app_service.intent(creator_mxid)
         else:
             user_api = app_service.bot_intent()
-        room_id = await user_api.create_room(alias_localpart=alias_localpart, **kwargs)
+        room_id = await user_api.create_room(
+            alias_localpart=alias_localpart, 
+            power_level_override=power_level_override,
+            **kwargs
+        )
         # Invite bot user if needed
         await api.ensure_joined(room_id, bot=user_api) # I see the advantage of this
 
@@ -104,8 +114,6 @@ async def create_channel_from_json(channel):
         },
         # everyone can invite
         'invite': 0,
-        'users': {user: 100 for user in config.matrix.users}               # As per config
-                | {get_user_mxid_by_localpart(config.matrix.username): 100} # Make ourselves admin
     }
     # Make creator admin
     if creator_mxid:
