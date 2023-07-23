@@ -101,6 +101,7 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
         user_mxid = await import_user(message['user_id'])
         
     user_api = app_service.intent(user_mxid)
+    event_id = None # initialize event ID variable (rare case: no message, no attachments, nothing)
 
     # Messages without a type are normal messages
     if not message['type'] or message['type'] == 'slack_attachment':
@@ -181,6 +182,9 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
                     ),
                     timestamp=message['create_at'],
                 )
+
+        # if there was no message sent, there is nothing left to do
+        if not event_id: return
 
         # store event ID
         state.matrix_event_id[message['id']] = event_id
