@@ -39,10 +39,15 @@ def get_alias_localpart(channel):
     return f"{config.matrix.room_prefix}{team['name']}_{channel['name']}"
 
 
-async def create_room(alias_localpart, name, power_level_override, creator_mxid):
+async def create_room(alias_localpart, creator_mxid=None, **kwargs):
     """
     Creates a Matrix room with the given properties, and invites and makes admin the
-    specified people in the config
+    specified people in the config. Returns the room ID of the newly created room or 
+    the already existing room, if it already exists.
+    Accepted kwargs include:
+    * name
+    * power_level_override
+    Full list: https://docs.mau.fi/python/latest/api/mautrix.client.api.html#mautrix.client.ClientAPI.create_room
     """
     app_service = get_app_service()
     api = app_service.bot_intent()
@@ -61,12 +66,7 @@ async def create_room(alias_localpart, name, power_level_override, creator_mxid)
             user_api = app_service.intent(creator_mxid)
         else:
             user_api = app_service.bot_intent()
-        room_id = await user_api.create_room(
-            preset=RoomCreatePreset.PUBLIC,
-            alias_localpart=alias_localpart,
-            name=name,
-            power_level_override=power_level_override,
-        )
+        room_id = await user_api.create_room(alias_localpart=alias_localpart, **kwargs)
         # Invite bot user if needed
         await api.ensure_joined(room_id, bot=user_api) # I see the advantage of this
 
@@ -112,9 +112,10 @@ async def create_channel_from_json(channel):
         power_level_override['users'] |= {creator_mxid: 100}
     return await create_room(
         alias_localpart=alias_localpart,
+        creator_mxid=creator_mxid,
+        preset=RoomCreatePreset.PUBLIC,
         name=channel['display_name'],
         power_level_override=power_level_override,
-        creator_mxid=creator_mxid,
     )
     
 
