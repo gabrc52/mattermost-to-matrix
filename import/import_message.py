@@ -208,14 +208,13 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
     elif message['type'] == 'system_add_to_channel':
         invited_user_id = message['props']['addedUserId']
         invited_matrix_user = await import_user(invited_user_id)
-        invited_api = app_service.intent(invited_matrix_user)
         try:
             await user_api.send_state_event(
                 room_id,
                 EventType.ROOM_MEMBER,
                 MemberStateEventContent(
                     membership=Membership.INVITE,
-                    displayname=await user_api.get_displayname(user_mxid),
+                    displayname=await user_api.get_displayname(invited_matrix_user),
                 ),
                 invited_matrix_user,
                 timestamp=message['create_at'],
