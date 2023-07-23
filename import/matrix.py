@@ -6,8 +6,8 @@ import os
 import sys
 
 import mautrix.errors
-from mautrix.appservice import AppService, AppServiceAPI, state_store
-from mautrix.types import RoomID, UserID
+from mautrix.appservice import AppServiceAPI, state_store
+from mautrix.types import UserID, EventType, RoomAvatarStateEventContent
 from mautrix.util.logging import TraceLogger
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -68,3 +68,25 @@ async def room_exists(room_alias):
         return True
     except mautrix.errors.request.MNotFound:
         return False
+
+
+async def get_room_avatar(room_mxid):
+    """
+    Gets the room picture, if any.
+    Returns None if there is no room picture.
+    """
+    app_service = get_app_service()
+    api = app_service.bot_intent()
+    try:
+        return await api.get_state_event(room_mxid, EventType.ROOM_AVATAR)
+    except mautrix.errors.request.MNotFound:
+        return None
+
+
+async def set_room_avatar(room_mxid, avatar_mxc):
+    """
+    Sets the room picture.
+    """
+    app_service = get_app_service()
+    api = app_service.bot_intent()
+    await api.send_state_event(room_mxid, EventType.ROOM_AVATAR, RoomAvatarStateEventContent(avatar_mxc))
