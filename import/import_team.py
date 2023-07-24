@@ -14,9 +14,13 @@ def get_team_by_name(team_name):
 
 def get_channels_by_team(team_id):
     """
-    Get all the channels with the given mattermost team ID
+    Get all the channel IDs with the given mattermost team ID
     """
-    return [channel for channel in channels if channel['team_id'] == team_id]
+    return [
+        channel['id']
+        for channel in channels
+        if channel['team_id'] == team_id and channel['id'] not in config.mattermost.skip_channels
+    ]
 
 
 def get_team_alias_localpart(team_name):
@@ -32,7 +36,7 @@ async def create_space_for_team(team):
     api = app_service.bot_intent()
     
     # Create the space (room) (if it doesn't already exist)
-    room_mxid = await create_room(
+    room_mxid, _ = await create_room(
         alias_localpart=get_team_alias_localpart(team['name']),
         name=team['display_name'],
         creation_content=RoomCreateStateEventContent(type=RoomType.SPACE),
@@ -70,8 +74,8 @@ async def import_team(team_name):
 
     # spec on spaces: https://spec.matrix.org/v1.7/client-server-api/#spaces
 
-    for channel in channels:
-        room_id = await import_channel(channel['id'])
+    for channel_id in channels:
+        room_id = await import_channel(channel_id)
         await api.send_state_event(team_id, EventType.SPACE_CHILD, SpaceChildStateEventContent(via=[config.matrix.homeserver]), room_id)
         await api.send_state_event(room_id, EventType.SPACE_PARENT, SpaceParentStateEventContent(via=[config.matrix.homeserver]), team_id)
 
