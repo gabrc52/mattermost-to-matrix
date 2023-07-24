@@ -24,6 +24,12 @@ mattermost:
     # of replies?
     # thread_threshold: 3
 
+    # List of channels to always thread, regardless of the above options
+    # always_thread:
+    #   - 8qztonpgkf8gffqddckrkpfyic
+    #   - pb7dp9psgpywuj567h73fdnxnr
+    #   - oi8nnwbn3trfjgc5cntzqc6ucc
+
 
 matrix:
   # See https://spec.matrix.org/v1.6/application-service-api/#registration

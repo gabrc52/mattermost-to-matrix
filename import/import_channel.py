@@ -3,6 +3,9 @@ import json
 import os
 import sys
 
+# change to the script's location
+os.chdir(os.path.dirname(__file__))
+
 from import_message import import_message
 from import_user import import_user
 from matrix import (config, get_alias_mxid, get_app_service,

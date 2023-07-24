@@ -30,6 +30,9 @@ class MatrixConfig:
     # The username to allocate for this application service
     username: Optional[str] = "mattermostbot"
 
+    # Whether to skip already existing rooms when importing
+    skip_existing: Optional[bool] = True
+
 
 @dataclass_json
 @dataclass
@@ -52,6 +55,9 @@ class MattermostBackfillConfig:
     # Only applied if `thread_equivalent` is 'auto': How many messages should there be in 
     # the Mattermost thread to use a Matrix thread instead of a Matrix reply?
     thread_threshold: int = 3
+
+    # List of channels to always thread, regardless of the above options
+    always_thread: tuple[str] = ()
 
 
 @dataclass_json
