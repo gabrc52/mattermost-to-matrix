@@ -2,7 +2,7 @@
 
 I *love* that you only have to listen to ONE websocket/endpoint. It makes it pretty easy to integrate with it as a bridge.
 
-This has documentation: <https://api.mattermost.com/#tag/WebSocket>
+This has documentation: <https://api.mattermost.com/#tag/WebSocket> with a full list of events but not the documentation of what they are for or what they contain.
 
 Events have an `event` type, `data` about the event, `broadcast` is about who the event was sent to. It also counts the number of requests using `seq`, which seems to be in the same spirit as the transaction IDs in Matrix, except defined much more informally in its spec.
 
@@ -18,6 +18,24 @@ status_change
  'data': {'status': 'online', 'user_id': '911gzgbxy3fwfbdf9eg6z8xgnw'},
  'event': 'status_change',
  'seq': 1}
+```
+
+## Channel viewed (self)
+
+[They "synchronize unread notifications across clients and devices"](https://docs.mattermost.com/configure/experimental-configuration-settings.html) so it's unlikely we'll be able to bridge presence (perhaps with using a bot token or admin account?)
+
+channel_viewed
+
+```py
+{'broadcast': {'channel_id': '',
+               'connection_id': '',
+               'omit_connection_id': '',
+               'omit_users': None,
+               'team_id': '',
+               'user_id': '911gzgbxy3fwfbdf9eg6z8xgnw'},
+ 'data': {'channel_id': 'ssw8374e8bgouchyb1dhypx8ih'},
+ 'event': 'channel_viewed',
+ 'seq': 4}
 ```
 
 ## Edit an old message
@@ -156,3 +174,34 @@ Analogous to the above, difference is the type of event (`reaction_removed`)
  'seq': 9}
 ```
 
+## Join/leave channel
+
+`user_added` and `user_removed`
+
+Note that events of type `posted` with their corresponding "System message" are sent too, so they are redundant and could probably be ignored.
+
+```py
+{'broadcast': {'channel_id': '3g5jnmyzzi8a9pcksonnraxzgy',
+               'connection_id': '',
+               'omit_connection_id': '',
+               'omit_users': None,
+               'team_id': '',
+               'user_id': ''},
+ 'data': {'team_id': '68ia7ywnopny8nmcdrkatmytjh',
+          'user_id': '6crqhw6nd3nn5pkxwjg3stensw'},
+ 'event': 'user_added',
+ 'seq': 5}
+```
+
+```py
+{'broadcast': {'channel_id': '3g5jnmyzzi8a9pcksonnraxzgy',
+               'connection_id': '',
+               'omit_connection_id': '',
+               'omit_users': None,
+               'team_id': '',
+               'user_id': ''},
+ 'data': {'remover_id': '6crqhw6nd3nn5pkxwjg3stensw',
+          'user_id': '6crqhw6nd3nn5pkxwjg3stensw'},
+ 'event': 'user_removed',
+ 'seq': 9}
+```
