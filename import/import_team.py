@@ -79,3 +79,14 @@ async def import_team(team_name):
         await api.send_state_event(team_id, EventType.SPACE_CHILD, SpaceChildStateEventContent(via=[config.matrix.homeserver]), room_id)
         await api.send_state_event(room_id, EventType.SPACE_PARENT, SpaceParentStateEventContent(via=[config.matrix.homeserver]), team_id)
 
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) != 2:
+        print("Usage: import_team.py [mattermost team name]", file=sys.stderr)
+        print('You may get the channel ID from the Mattermost URL.', file=sys.stderr)
+        exit(1)
+    team_name = sys.argv[1]
+    asyncio.run(import_team(team_name))
+    # Close the session when done
+    asyncio.run(get_app_service().session.close())
