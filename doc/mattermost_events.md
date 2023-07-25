@@ -6,6 +6,16 @@ This has documentation: <https://api.mattermost.com/#tag/WebSocket> with a full 
 
 Events have an `event` type, `data` about the event, `broadcast` is about who the event was sent to. It also counts the number of requests using `seq`, which seems to be in the same spirit as the transaction IDs in Matrix, except defined much more informally in its spec.
 
+It appears that there is also the ability to send some events from the websocket:
+
+> The list of WebSocket API actions is:
+> 
+> * user_typing
+> * get_statuses
+> * get_statuses_by_ids
+> 
+> To see how these actions work, please refer to either the [Golang WebSocket driver](https://github.com/mattermost/mattermost-server/blob/master/model/websocket_client.go "yes, it's broken") or our [JavaScript WebSocket driver](https://github.com/mattermost/mattermost-redux/blob/master/src/client/websocket_client.ts).
+
 ## Gone online (self)
 
 status_change
