@@ -117,14 +117,20 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
 
     # Messages without a type are normal messages
     if not message['type'] or message['type'] == 'slack_attachment':
-        # get event IDs of reply/thread if needed
-        # the second condition is needed because malfunctioning bots may reply to a "System message"
-        # which is not actually a message
-        if message['root_id'] and message['root_id'] in state.matrix_event_id:
-            mattermost_reply_to = state.most_recent_message_in_thread.get(message['root_id']) or message['root_id']
-            matrix_thread_root = state.matrix_event_id[message['root_id']]
-            matrix_reply_to = state.matrix_event_id[mattermost_reply_to]
-            state.most_recent_message_in_thread[message['root_id']] = message['id']
+        matrix_thread_root = state.get_matrix_event(message['root_id'])
+        # the second condition is needed because malfunctioning Mattermost bots may reply to a "System message"
+        # which we do not consider a message (although they do have Matrix event IDs; I'm not sure if
+        # you can technically reply to a member event, but tbh you shouldn't)
+        if message['root_id'] and matrix_thread_root:
+            # not really the message we are replying to but the one above, because
+            # Mattermost does not keep track of which message you clicked "reply" on
+            mattermost_reply_to = state.get_most_recent_message_in_thread(message['root_id']) or message['root_id']
+            matrix_reply_to = state.get_matrix_event(mattermost_reply_to)
+            
+            # application services may not necessarily process messages in order
+            # which is another reason why we cannot easily support `thread_equivalent='reply'`
+            # when running on real-time
+            state.set_most_recent_message_in_thread(message['root_id'], message['id'])
 
             def set_reply_or_thread(content: BaseMessageEventContent):
                 if thread_equivalent == 'reply':
@@ -199,7 +205,7 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
         if not event_id: return
 
         # store event ID
-        state.matrix_event_id[message['id']] = event_id
+        state.remember_matrix_event(mattermost_id=message['id'], matrix_id=event_id)
 
         # Handle reactions
         # Specifically, react to the last event ID
