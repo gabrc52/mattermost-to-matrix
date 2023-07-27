@@ -33,6 +33,9 @@ class MatrixConfig:
     # Whether to skip already existing rooms when importing
     skip_existing: Optional[bool] = True
 
+    # Display name "template", will use Python .format()
+    display_name_format: Optional[str] = "{name} - {platform}"
+
 
 @dataclass_json
 @dataclass

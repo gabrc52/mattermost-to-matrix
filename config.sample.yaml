@@ -56,6 +56,12 @@ matrix:
   # run the import scripts twice, it will import all messages twice.
   skip_existing: true
 
+  # Format to use for display names
+  #   {name} will replaced with the display name (if available) or username, depending on
+  #   what prefer_usernames is set to. {platform} will be replaced with the word Mattermost
+  #   Examples: "[{platform}] {name}", "{name}" for "[Mattermost] Gabriel R." and "Gabriel R."
+  display_name_format: "{name} - {platform}"
+
   # Prefix to use for aliases; uncomment to change
   # room_prefix: _mattermost_
 

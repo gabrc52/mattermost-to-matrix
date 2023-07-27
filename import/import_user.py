@@ -90,5 +90,10 @@ async def import_user(user_id):
     else:
         avatar = None
 
-    return await create_user(mxid, get_displayname(user), avatar_bytes=avatar)
+    display_name = config.matrix.display_name_format.format(
+        name=get_displayname(user),
+        platform='Mattermost',
+    )
+
+    return await create_user(mxid, display_name, avatar_bytes=avatar)
 
