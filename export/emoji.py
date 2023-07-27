@@ -1,4 +1,9 @@
 """
+OBSOLETE: Now sourcing our emoji directly from 
+https://github.com/mattermost/mattermost/blob/master/webapp/channels/src/utils/emoji.json
+
+~~~
+
 Ideas to resolve emoji shortcodes into an actual Unicode character:
 
 1. BeautifulSoup + inspect element + iterate through each, the HTML has everything you need

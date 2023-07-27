@@ -18,7 +18,9 @@ Everything will be downloaded into JSON files.
 
  * `download_media.py`: Once you export messages, it can go over the media in them, and download it. You can safely run it more than once if you download more messages later, as it will only download media that has not already been downloaded.
 
- * `emoji.py`: Re-generates emoji.json based on the content of emoji.html, which comes from "Inspect element"ing Mattermost. It still needs testing with new Mattermost versions.
+ * `emoji.py` (deprecated): Re-generates emoji.json based on the content of emoji.html, which comes from "Inspect element"ing Mattermost.
+
+ * `emoji_v2.py`: Re-generates emoji.json based on the content of emoji.json from Mattermost's repo.
 
 ## Other scripts:
  

@@ -4,4 +4,4 @@ media/*
 pfp/*
 
 # Committing the emojis is fine
-!emoji.json
+!emoji*.json
