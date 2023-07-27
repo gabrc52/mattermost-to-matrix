@@ -33,7 +33,8 @@ class MatrixConfig:
     # Whether to skip already existing rooms when importing
     skip_existing: Optional[bool] = True
 
-    # Display name "template", will use Python .format()
+    # Display name "template". {name} will be replaced with display name,
+    # and {platform} with Mattermost or Zephyr accordingly
     display_name_format: Optional[str] = "{name} - {platform}"
 
 
