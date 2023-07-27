@@ -168,10 +168,11 @@ async def import_channel(channel_id):
         else:
             topic_equivalent = 'header'
 
+    thread_equivalent = config.mattermost.backfill.thread_equivalent
     # If we choose "auto" for thread changes, calculate thread sizes
     # (including the root)
     thread_sizes = None
-    if config.mattermost.backfill.thread_equivalent == 'auto':
+    if thread_equivalent == 'auto':
         thread_sizes = {message['id']: 1 for message in messages}
         for message in messages:
             if message['root_id']:
@@ -184,7 +185,7 @@ async def import_channel(channel_id):
     else:
         with Bar(f"Importing {channel['name']}", max=len(messages)) as bar:
             for message in reversed(messages):
-                await import_message(message, room_id, topic_equivalent, state, thread_sizes)
+                await import_message(message, room_id, topic_equivalent, thread_equivalent, state, thread_sizes)
                 
                 bar.next()
 

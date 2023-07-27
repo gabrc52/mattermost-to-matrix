@@ -61,7 +61,7 @@ def get_reactions(reactions):
     })
 
 
-async def import_message(message, room_id, topic_equivalent, state: MessageState, thread_sizes = None):
+async def import_message(message, room_id, topic_equivalent, thread_equivalent, state: MessageState, thread_sizes = None):
     """
     Import a specific message from the Mattermost JSON format
     into the specified room ID
@@ -71,7 +71,6 @@ async def import_message(message, room_id, topic_equivalent, state: MessageState
     """
     # Process / validate some options related to backfilling
     assert topic_equivalent in ('header', 'purpose', 'both')
-    thread_equivalent = config.mattermost.backfill.thread_equivalent
     if thread_equivalent == 'auto' and message['root_id']:
         assert thread_sizes is not None
         if thread_sizes[message['root_id']] >= config.mattermost.backfill.thread_threshold:
