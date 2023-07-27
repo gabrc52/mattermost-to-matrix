@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import json
 import asyncio
 from import_team import import_team
