@@ -4,7 +4,7 @@ import os
 import sys
 
 import magic
-from matrix import get_app_service, get_bridged_user_mxid
+from matrix import get_app_service, get_bridged_user_mxid, config
 
 if not os.path.exists('../downloaded/users.json'):
     print(f'users.json not found! Run export_users.py first.', file=sys.stderr)
@@ -30,15 +30,14 @@ def get_displayname(user: dict):
     (the concatenation of first name and last name if applicable, otherwise,
     their username)
     """
-    # TODO: add config option to only use username
-
     # Being preentive if people have a spare space after their first name
     full_name = (user['first_name']+' '+user['last_name']).strip().replace('  ', ' ')
     username = user['username']
-    if full_name:
-        return full_name
-    else:
+
+    if config.prefer_usernames or not full_name:
         return username
+    else:
+        return full_name
 
 
 async def create_user(mxid, display_name, avatar_mxc=None, avatar_bytes=None, avatar_filename=None):

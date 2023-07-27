@@ -88,8 +88,10 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
     # Respect request to override username
     if 'override_username' in message['props']:
         username = message['props']['override_username']
-        # TODO: use username if force_username is true in config
-        display_name = message['props'].get('webhook_display_name') or username
+        if config.prefer_usernames:
+            display_name = username
+        else:
+            display_name = message['props'].get('webhook_display_name') or username
         user_mxid = get_bridged_user_mxid(username)
         # Apply a custom prefix if using Zephyr (MIT-specific functionality)
         if 'from_zephyr' in message['props']:
