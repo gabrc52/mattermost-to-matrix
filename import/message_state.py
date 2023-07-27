@@ -1,6 +1,14 @@
-# TODO: we want some longer term persistence
-# https://pypi.org/project/sqlitedict/ seems cool.
-# or sqlite directly
+from sqlitedict import SqliteDict
+
+DB_FILE = "db.sqlite"
+
+# We don't want any serialization from sqlitedict
+
+def _encode(str: str):
+    return str.encode()
+
+def _decode(obj: bytes):
+    return obj.decode()
 
 class MessageState:
     """
@@ -9,18 +17,37 @@ class MessageState:
 
     # the most recent message in a given thread, as a mattermost
     # message ID, because mattermost only keeps track of the root
-    _most_recent_message_in_thread: dict[str, str]
+    _most_recent_message_in_thread: SqliteDict
     
     # mapping from mattermost message ID to matrix event ID
-    _matrix_event_id: dict[str, str]
+    _matrix_event_id: SqliteDict
 
     # mapping from matrix event ID to mattermost message ID
-    _mattermost_message_id: dict[str, str]
+    _mattermost_message_id: SqliteDict
 
     def __init__(self):
-        self._most_recent_message_in_thread = {}
-        self._matrix_event_id = {}
-        self._mattermost_message_id = {}
+        self.db = SqliteDict(DB_FILE)
+        self._most_recent_message_in_thread = SqliteDict(
+            DB_FILE,
+            tablename="thread",
+            autocommit=True,
+            encode=_encode,
+            decode=_decode,
+        )
+        self._matrix_event_id = SqliteDict(
+            DB_FILE,
+            tablename="mm2matrix",
+            autocommit=True,
+            encode=_encode,
+            decode=_decode,
+        )
+        self._mattermost_message_id = SqliteDict(
+            DB_FILE,
+            tablename="matrix2mm",
+            autocommit=True,
+            encode=_encode,
+            decode=_decode,
+        )
 
     def get_matrix_event(self, mattermost_id):
         """
@@ -28,14 +55,18 @@ class MessageState:
         message ID. Returns None if we can't remember this Mattermost event ID,
         otherwise returns the Matrix event ID.
         """
-        return self._matrix_event_id.get(mattermost_id)
+        if mattermost_id not in self._matrix_event_id:
+            return None
+        return self._matrix_event_id[mattermost_id]
     
     def get_mattermost_event(self, matrix_id):
         """
         Returns the Mattermost message ID of the message with given Matrix ID,
         otherwise None if it can't be found
         """
-        return self._mattermost_message_id.get(matrix_id)
+        if matrix_id not in self._mattermost_message_id:
+            return None
+        return self._mattermost_message_id[matrix_id]
 
     def remember_matrix_event(self, mattermost_id, matrix_id):
         """
@@ -53,7 +84,9 @@ class MessageState:
         """
         # this might be too much of a hassle to have with the bridge,
         # which is why I might just set it to work with threads to threads
-        return self._most_recent_message_in_thread.get(root_mattermost_id)
+        if root_mattermost_id not in self._most_recent_message_in_thread:
+            return None
+        return self._most_recent_message_in_thread[root_mattermost_id]
     
     def set_most_recent_message_in_thread(self, root_mattermost_id, mattermost_id):
         """
