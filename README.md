@@ -21,7 +21,7 @@ app_service_config_files:
  - /etc/matrix-synapse/appservices/mattermost_migration.yaml
 ```
 
-5. Run the import script `cd import && python import_team.py sipb`, replacing `sipb` with your desired team to import. To export an individual Mattermost room to a Matrix room, you can use `python import_channel.py [channel ID]`.
+5. Run the import script `python import/import_all_teams.py`. Alternatively, you may wish to import only some teams or channels, e.g. `python import_team.py sipb` or `python import_channel.py 3g5jnmyzzi8a9pcksonnraxzgy`, with the team name or channel ID, respectively.
 
 6. Once you have imported your messages, you can revert the changes you made to your Synapse `config.yaml` or `conf.d`, since it is a good idea to revoke unused credentials.
 

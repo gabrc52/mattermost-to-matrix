@@ -5,6 +5,9 @@ from import_channel import channels, teams, create_room, import_channel
 from matrix import get_app_service, config, get_room_avatar, set_room_avatar
 from mautrix.types import RoomCreateStateEventContent, RoomType, RoomCreatePreset, EventType, SpaceChildStateEventContent, SpaceParentStateEventContent
 
+# change to the script's location
+os.chdir(os.path.dirname(__file__))
+
 def get_team_by_name(team_name):
     """
     Get a team JSON by name
