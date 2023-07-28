@@ -10,7 +10,7 @@ You don't need a bot account or admin access on the Mattermost side to use these
 
 1. Copy `config.sample.yaml` to `config.yaml` and edit with your own settings.
 
-2. Export your Mattermost data using the helper script: `export/download_everything.sh`. For more info about specific things that you can export, see <export/README.md>, 
+2. Export your Mattermost data using the helper script: `export_from_mattermost/download_everything.sh`. For more info about specific things that you can export, see [export_from_mattermost/README.md](export_from_mattermost/README.md), 
 
 3. Generate a Matrix registration file using `python generate_registration.py`, which will be called `registration.yaml` but you can rename.
 
@@ -21,7 +21,7 @@ app_service_config_files:
  - /etc/matrix-synapse/appservices/mattermost_migration.yaml
 ```
 
-5. Run the import script `import/import_all_teams.py`. Alternatively, you may wish to import only some teams or channels, e.g. `import/import_team.py sipb` or `import/import_channel.py 3g5jnmyzzi8a9pcksonnraxzgy`, with the team name or channel ID, respectively.
+5. Run the import script `import_to_matrix/import_all_teams.py`. Alternatively, you may wish to import only some teams or channels, e.g. `import_to_matrix/import_team.py sipb` or `import_to_matrix/import_channel.py 3g5jnmyzzi8a9pcksonnraxzgy`, with the team name or channel ID, respectively.
 
 6. Once you have imported your messages, you can revert the changes you made to your Synapse `config.yaml` or `conf.d`, since it is a good idea to revoke unused credentials.
 
