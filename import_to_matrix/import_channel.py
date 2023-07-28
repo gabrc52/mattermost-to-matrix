@@ -146,7 +146,7 @@ async def create_channel_from_json(channel):
     
 
 
-async def create_channel(channel):
+async def create_channel(channel_id):
     """
     Create a Mattermost channel (with given `channel_id`) into a Matrix room.
     Returns the room ID on Matrix

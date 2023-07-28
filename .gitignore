@@ -14,3 +14,6 @@ mx-state.json
 
 # Any databases
 *.sqlite
+
+# Message log
+message.log

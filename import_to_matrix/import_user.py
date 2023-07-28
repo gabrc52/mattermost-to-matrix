@@ -5,6 +5,7 @@ import sys
 import magic
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from import_to_matrix.matrix import get_app_service, get_bridged_user_mxid, config
+os.chdir(os.path.dirname(__file__))
 
 if not os.path.exists('../downloaded/users.json'):
     print(f'users.json not found! Run export_users.py first.', file=sys.stderr)
@@ -20,7 +21,7 @@ def get_mattermost_user(user_id):
     results = [user for user in users if user['id'] == user_id]
     if not results:
         # TODO: maybe this may arise if someone deleted their account
-        raise ValueError('Inexistent Mattermost user ID')
+        raise ValueError(f'Inexistent Mattermost user ID {user_id}')
     return results[0]
 
 
