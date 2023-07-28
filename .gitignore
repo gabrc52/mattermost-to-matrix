@@ -11,3 +11,6 @@ private*
 
 # Matrix state
 mx-state.json
+
+# Any databases
+*.sqlite
