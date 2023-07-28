@@ -32,8 +32,15 @@ def get_mattermost_channel(channel_id):
         raise ValueError('Inexistent Mattermost channel ID')
     return results[0]
 
+def get_alias_localpart(team, channel):
+    """
+    Given the Mattermost team name and channel name, get the
+    Matrix alias localpart
+    """
+    return f"{config.matrix.room_prefix}{team}_{channel}"
 
-def get_alias_localpart(channel):
+
+def get_alias_localpart_from_channel_json(channel):
     """
     Given a Mattermost channel (JSON), get the localpart
     of the Matrix alias to it
@@ -41,7 +48,7 @@ def get_alias_localpart(channel):
     # perhaps this is where we can add a configuration option to omit the
     # team name
     team = [team for team in teams if team['id'] == channel['team_id']][0]
-    return f"{config.matrix.room_prefix}{team['name']}_{channel['name']}"
+    return get_alias_localpart(team['name'], channel['name'])
 
 
 async def create_room(alias_localpart, power_level_override: dict=None, creator_mxid=None, **kwargs):
@@ -98,7 +105,7 @@ async def create_channel_from_json(channel):
     Creates a Mattermost channel with the given channel JSON into a Matrix room.
     Returns the room ID on Matrix
     """
-    alias_localpart = get_alias_localpart(channel)
+    alias_localpart = get_alias_localpart_from_channel_json(channel)
     creator_mxid = await import_user(channel['creator_id']) if channel['creator_id'] else None
     power_level_override = {
         'events': {
