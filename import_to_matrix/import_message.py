@@ -15,6 +15,7 @@ from mautrix.types import (BaseFileInfo, BaseMessageEventContent, EventType,
                            RoomTopicStateEventContent, TextMessageEventContent)
 from import_to_matrix.message_state import MessageState
 from import_to_matrix.not_in_mautrix import join_user_to_room, pin_message
+from export_from_mattermost.login import mm
 
 emojis: dict = json.load(open('../downloaded/emoji.json', 'r'))
 
@@ -166,9 +167,14 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
             for file in message['metadata']['files']:
                 # Upload first
                 filename = f'../downloaded/media/{file["id"]}'
-                with open(filename, 'rb') as f:
-                    contents = f.read()
-                    file_uri = await user_api.upload_media(contents, file['mime_type'], file['name'])
+                if os.path.exists(filename):
+                    with open(filename, 'rb') as f:
+                        contents = f.read()
+                else:
+                    # Download if we haven't yet (only in memory is fine)
+                    contents = mm.get_file(file['id']).content
+                    
+                file_uri = await user_api.upload_media(contents, file['mime_type'], file['name'])
                 
                 is_image = file['mime_type'].startswith('image')
 
