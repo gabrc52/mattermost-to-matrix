@@ -1,5 +1,8 @@
-import mattermost
-from login import mm
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from export_from_mattermost.login import mm
 
 def download_media(media_id):
     """

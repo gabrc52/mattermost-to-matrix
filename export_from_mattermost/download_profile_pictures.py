@@ -1,9 +1,12 @@
 """
 Download all user and team profile pictures
 """
-
-from media import download_media, download_profile_picture, download_team_picture
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from export_from_mattermost.media import download_media, download_profile_picture, download_team_picture
+
 import json
 
 # Create subdirectory if needed

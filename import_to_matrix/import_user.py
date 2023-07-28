@@ -2,9 +2,9 @@ import asyncio
 import json
 import os
 import sys
-
 import magic
-from matrix import get_app_service, get_bridged_user_mxid, config
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from import_to_matrix.matrix import get_app_service, get_bridged_user_mxid, config
 
 if not os.path.exists('../downloaded/users.json'):
     print(f'users.json not found! Run export_users.py first.', file=sys.stderr)

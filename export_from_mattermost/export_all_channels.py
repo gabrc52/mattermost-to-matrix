@@ -1,5 +1,8 @@
-from export_channel import export_channel, mm, own_id, config
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from export_from_mattermost.export_channel import export_channel, mm, own_id, config
 import json
 
 if not os.path.exists('../downloaded/channels.json'):

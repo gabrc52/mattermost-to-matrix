@@ -8,12 +8,16 @@ import sys
 # change to the script's location
 os.chdir(os.path.dirname(__file__))
 
-from import_message import import_message
-from import_user import import_user
-from matrix import (config, get_alias_mxid, get_app_service,
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from import_to_matrix.import_message import import_message
+from import_to_matrix.import_user import import_user
+from import_to_matrix.matrix import (config, get_alias_mxid, get_app_service,
                     get_user_mxid_by_localpart, room_exists)
 from mautrix.types import RoomCreatePreset
-from message_state import MessageState
+from import_to_matrix.message_state import MessageState
 from progress.bar import Bar
 
 if not os.path.exists('../downloaded/channels.json'):

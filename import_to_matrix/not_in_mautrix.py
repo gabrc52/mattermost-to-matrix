@@ -1,4 +1,7 @@
-from matrix import get_app_service
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from import_to_matrix.matrix import get_app_service
 from mautrix.api import Method, Path
 import mautrix.errors
 

@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import json
 import asyncio
-from import_team import import_team
+from import_to_matrix.import_team import import_team
 import os
 
 # change to the script's location

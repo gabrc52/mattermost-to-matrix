@@ -1,17 +1,20 @@
 import json
 import sys
-
 import markdown
 import mautrix.errors
-from import_user import create_user, import_user
-from matrix import config, get_app_service, get_bridged_user_mxid
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from import_to_matrix.import_user import create_user, import_user
+from import_to_matrix.matrix import config, get_app_service, get_bridged_user_mxid
 from mautrix.types import (BaseFileInfo, BaseMessageEventContent, EventType,
                            Format, ImageInfo, MediaMessageEventContent,
                            Membership, MemberStateEventContent, MessageType,
                            RoomNameStateEventContent,
                            RoomTopicStateEventContent, TextMessageEventContent)
-from message_state import MessageState
-from not_in_mautrix import join_user_to_room, pin_message
+from import_to_matrix.message_state import MessageState
+from import_to_matrix.not_in_mautrix import join_user_to_room, pin_message
 
 emojis: dict = json.load(open('../downloaded/emoji.json', 'r'))
 

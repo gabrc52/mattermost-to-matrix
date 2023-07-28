@@ -3,8 +3,10 @@
 import asyncio
 import os
 import magic
-from import_channel import channels, teams, create_room, import_channel
-from matrix import get_app_service, config, get_room_avatar, set_room_avatar
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from import_to_matrix.import_channel import channels, teams, create_room, import_channel
+from import_to_matrix.matrix import get_app_service, config, get_room_avatar, set_room_avatar
 from mautrix.types import RoomCreateStateEventContent, RoomType, RoomCreatePreset, EventType, SpaceChildStateEventContent, SpaceParentStateEventContent
 
 # change to the script's location
