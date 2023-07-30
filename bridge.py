@@ -9,6 +9,7 @@ from pprint import pprint
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 import mautrix.errors
+from mautrix.types import TextMessageEventContent, MessageType
 
 from config import config
 
@@ -120,16 +121,35 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
                 thread_equivalent='thread', # wait, 'reply' would work trivially, just not 'auto'
                 state=state,
             )
-        case 'post_edited':
-            # TODO implement
-            # TODO test subsequent edits, they require different code
-            pass
         case 'post_deleted':
             # TODO: I know this will break when a Mattermost post goes to more than
             # one Matrix message (https://github.com/matrix-org/matrix-spec/issues/541)
+            # A solution would be to store the full list of Matrix events for a given Mattermost ID
+            # instead of a one-to-one relationship
+
             message = json.loads(e.data['post'])
             event_id = state.get_matrix_event(message['id'])
             await user_api.redact(room_id, event_id)
+        case 'post_edited':
+            # We are assuming that people will only edit text messages
+            # and only the message will change. It is not always true, for instance
+            # people may edit the override_username prop in the worst of cases,
+            # which isn't bridgeable into a different ghost.
+
+            # TODO: Due to the same issue of Matrix separating messages,
+            # this will also break when attempting to edit a message with attachments
+            # The most straightforward solution is to keep ANOTHER table with
+            # the event IDs of the text messages 
+            
+            message = json.loads(e.data['post'])
+            original_event_id = state.get_matrix_event(message['id'])
+            content = TextMessageEventContent(
+                msgtype=MessageType.TEXT,
+                body=message['message']
+            )
+            content.set_edit(original_event_id)
+            event_id = await user_api.send_message(room_id, content)            
+            # Because the spec says that you cannot edit an edit, we do not store the event ID
         case 'reaction_added':
             try:
                 post_id, emoji = e.get_reaction()
@@ -152,6 +172,10 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
             # TODO bridge
             status = e.data['status']
             print(f"{user['username']} is {status} on {channel['name']}")
+        case 'user_update':
+            # TODO bridge
+            # Display name or profile picture change (or username!)
+            pass
         case _:
             print(f"Ignoring unknown event type {e.event}")
         

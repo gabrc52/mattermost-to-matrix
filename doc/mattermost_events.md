@@ -16,6 +16,58 @@ It appears that there is also the ability to send some events from the websocket
 > 
 > To see how these actions work, please refer to either the [Golang WebSocket driver](https://github.com/mattermost/mattermost-server/blob/master/model/websocket_client.go "yes, it's broken") or our [JavaScript WebSocket driver](https://github.com/mattermost/mattermost-redux/blob/master/src/client/websocket_client.ts).
 
+## Display name changes
+
+user_updated
+
+It doesn't say exactly what the change was so you can compare the names to see what changed.
+
+See the next section.
+
+## Profile picture changes
+
+user_updated too
+
+This event does not say if the user changed their profile picture.
+But it is reflected in `last_picture_update`. We could probably check if it is within 10 seconds of
+the current timestamp, or something like that.
+
+Or we could download the profile picture and compare the hashes. I don't know.
+
+```py
+{'broadcast': {'channel_id': '',
+               'connection_id': '',
+               'omit_connection_id': '',
+               'omit_users': None,
+               'team_id': '',
+               'user_id': ''},
+ 'data': {'user': {'auth_data': '',
+                   'auth_service': '',
+                   'create_at': 1677727817078,
+                   'delete_at': 0,
+                   'disable_welcome_email': False,
+                   'email': 'rodriguez@mit.edu',
+                   'first_name': 'Gabriel',
+                   'id': '6crqhw6nd3nn5pkxwjg3stensw',
+                   'last_name': '',
+                   'last_picture_update': 1690750077974,
+                   'locale': 'en',
+                   'nickname': '',
+                   'position': '',
+                   'roles': 'system_user',
+                   'timezone': {'automaticTimezone': '',
+                                'manualTimezone': '',
+                                'useAutomaticTimezone': 'true'},
+                   'update_at': 1690750077974,
+                   'username': 'rodriguez'}},
+ 'event': 'user_updated',
+ 'seq': 20}
+```
+
+## Profile picture changes
+
+user_updated
+
 ## Gone online (self)
 
 status_change
