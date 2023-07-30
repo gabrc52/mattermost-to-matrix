@@ -41,6 +41,13 @@ class MessageState:
             encode=_encode,
             decode=_decode,
         )
+        self._matrix_text_event_id = SqliteDict(
+            DB_FILE,
+            tablename="mm2matrixtext",
+            autocommit=True,
+            encode=_encode,
+            decode=_decode,
+        )
         self._mattermost_message_id = SqliteDict(
             DB_FILE,
             tablename="matrix2mm",
@@ -59,6 +66,16 @@ class MessageState:
             return None
         return self._matrix_event_id[mattermost_id]
     
+    def get_matrix_text_event(self, mattermost_id):
+        """
+        Returns the Matrix ID of the *text* message corresponding to the given
+        Mattermost message ID. Returns None if the Mattermost ID does not
+        correspond to any text message on Matrix.
+        """
+        if mattermost_id not in self._matrix_text_event_id:
+            return None
+        return self._matrix_text_event_id[mattermost_id]
+    
     def get_mattermost_event(self, matrix_id):
         """
         Returns the Mattermost message ID of the message with given Matrix ID,
@@ -71,10 +88,22 @@ class MessageState:
     def remember_matrix_event(self, mattermost_id, matrix_id):
         """
         Remembers that the event with mattermost_id on Mattermost was bridged
-        to the event with matrix_id on Matrix (or maybe vice versa)
+        to the event with matrix_id on Matrix (or maybe vice versa).
         """
         assert mattermost_id not in self._matrix_event_id, 'did you bridge this twice?'
         self._matrix_event_id[mattermost_id] = matrix_id
+        self._mattermost_message_id[matrix_id] = mattermost_id
+
+    def remember_matrix_text_event(self, mattermost_id, matrix_id):
+        """
+        Remembers that the event with mattermost_id on Mattermost was bridged
+        to the event with matrix_id on Matrix, and that such event is a text message.
+        
+        (This is needed because Matrix does not support sending messages with attachments,
+        so attachments are sent on a separate message each, meaning there is not really
+        a one-to-one relationship between mattermost post IDs and Matrix event IDs)
+        """
+        self._matrix_text_event_id[mattermost_id] = matrix_id
         self._mattermost_message_id[matrix_id] = mattermost_id
 
     def get_most_recent_message_in_thread(self, root_mattermost_id):

@@ -176,6 +176,10 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
                 content,
                 timestamp=message['create_at']
             )
+            state.remember_matrix_text_event(
+                mattermost_id=message['id'],
+                matrix_id=event_id,
+            )
             # TODO: if edited, edit it right after so it says edited
 
         # Handle media

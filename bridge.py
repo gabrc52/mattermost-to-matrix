@@ -135,21 +135,16 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
             # and only the message will change. It is not always true, for instance
             # people may edit the override_username prop in the worst of cases,
             # which isn't bridgeable into a different ghost.
-
-            # TODO: Due to the same issue of Matrix separating messages,
-            # this will also break when attempting to edit a message with attachments
-            # The most straightforward solution is to keep ANOTHER table with
-            # the event IDs of the text messages 
-            
             message = json.loads(e.data['post'])
-            original_event_id = state.get_matrix_event(message['id'])
-            content = TextMessageEventContent(
-                msgtype=MessageType.TEXT,
-                body=message['message']
-            )
-            content.set_edit(original_event_id)
-            event_id = await user_api.send_message(room_id, content)            
-            # Because the spec says that you cannot edit an edit, we do not store the event ID
+            original_event_id = state.get_matrix_text_event(message['id'])
+            if original_event_id:
+                content = TextMessageEventContent(
+                    msgtype=MessageType.TEXT,
+                    body=message['message']
+                )
+                content.set_edit(original_event_id)
+                event_id = await user_api.send_message(room_id, content)            
+                # Because the spec says that you cannot edit an edit, we do not store the event ID
         case 'reaction_added':
             try:
                 post_id, emoji = e.get_reaction()
