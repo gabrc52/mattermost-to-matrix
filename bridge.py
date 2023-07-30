@@ -7,7 +7,7 @@ import asyncio
 import mattermost.ws
 from pprint import pprint
 import mautrix.errors
-from mautrix.types import TextMessageEventContent, MessageType
+from mautrix.types import TextMessageEventContent, MessageType, PresenceState
 
 from config import config
 
@@ -108,9 +108,23 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
             print(f"{user['username']} is typing on {channel['name']}")
             await user_api.set_typing(room_id, 2000)
         case 'status_change':
-            # TODO bridge
+            # Interestingly, these events only appear for the bot's user ID
+            # TODO: see if I've gotten a response in 
+            # https://community.mattermost.com/core/pl/fodkj3o7minf5rzg7uc74hnsxr
+
+            # The web client calls this endpoint to get presence
+            # https://mattermost.mit.edu/api/v4/users/status/ids
+
             status = e.data['status']
+            matrix_status = {
+                'online': PresenceState.ONLINE,
+                'away': PresenceState.UNAVAILABLE,
+                'offline': PresenceState.OFFLINE,
+                'dnd': PresenceState.UNAVAILABLE,
+            }
+
             print(f"{user['username']} is {status}")
+            await user_api.set_presence(matrix_status[status])
         case 'user_updated':
             # Display name or profile picture change
 
