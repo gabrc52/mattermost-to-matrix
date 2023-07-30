@@ -6,77 +6,23 @@ import json
 import asyncio
 import mattermost.ws
 from pprint import pprint
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json
 import mautrix.errors
 from mautrix.types import TextMessageEventContent, MessageType
 
 from config import config
 
 # naming/organization is unfortunate since we didn't plan for a bridge at the start
-from import_to_matrix.import_message import import_message, get_emoji
+from import_to_matrix.import_message import import_message
 from import_to_matrix.import_channel import get_mattermost_channel, create_channel
-from import_to_matrix.import_user import get_mattermost_user, import_user
+from import_to_matrix.import_user import import_user
 from import_to_matrix.matrix import get_app_service, room_exists
 from import_to_matrix.not_in_mautrix import remove_reaction
 from import_to_matrix.message_state import MessageState
 from export_from_mattermost.login import mm
+from export_from_mattermost.mattermost_event import MattermostEvent
 
 bot_user = mm.get_user()
 state = MessageState()
-
-@dataclass_json
-@dataclass
-class MattermostEvent:
-    # Event type
-    event: str
-
-    # The actual event
-    data: dict
-
-    # Info about where the event was emitted
-    broadcast: dict
-
-    # Counter
-    seq: int
-
-    def get_mattermost_user_id(self):
-        """
-        Gets the Mattermost user ID of the event,
-        or None if not found
-        """
-        if 'user_id' in self.broadcast and self.broadcast['user_id']:
-            return self.broadcast['user_id']
-        if 'user_id' in self.data and self.data['user_id']:
-            return self.data['user_id']
-        # Reactions have it elsewhere
-        if 'reaction' in self.data:
-            return json.loads(self.data['reaction'])['user_id']
-        # Posts have it elsewhere
-        if 'post' in self.data:
-            return json.loads(self.data['post'])['user_id']
-
-    
-    def get_mattermost_user(self):
-        """
-        Gets the Mattermost user dict of the event,
-        or None if not found
-        """
-        user_id = self.get_mattermost_user_id()
-        if user_id:
-            return get_mattermost_user(user_id)
-        
-    def get_reaction(self):
-        """
-        Assumes this is a reaction event. Returns a tuple
-        with (mattermost message ID, reaction emoji)
-        """
-        assert 'reaction' in self.data
-        dict = json.loads(self.data['reaction'])
-        return dict['post_id'], get_emoji(dict['emoji_name'])
-
-        
-
 
 async def on_mattermost_message(e: MattermostEvent) -> None:
     app_service = get_app_service()
