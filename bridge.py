@@ -14,7 +14,7 @@ from config import config
 # naming/organization is unfortunate since we didn't plan for a bridge at the start
 from import_to_matrix.import_message import import_message
 from import_to_matrix.import_channel import get_mattermost_channel, create_channel
-from import_to_matrix.import_user import get_mattermost_user
+from import_to_matrix.import_user import get_mattermost_user, import_user
 from import_to_matrix.matrix import get_app_service, room_exists
 from import_to_matrix.message_state import MessageState
 from export_from_mattermost.login import mm
@@ -37,27 +37,62 @@ class MattermostEvent:
     # Counter
     seq: int
 
+    def get_mattermost_user_id(self):
+        """
+        Gets the Mattermost user ID of the event,
+        or None if not found
+        """
+        if 'user_id' in self.broadcast and self.broadcast['user_id']:
+            return self.broadcast['user_id']
+        if 'user_id' in self.data and self.data['user_id']:
+            return self.data['user_id']
+    
+    def get_mattermost_user(self):
+        """
+        Gets the Mattermost user dict of the event,
+        or None if not found
+        """
+        user_id = self.get_mattermost_user_id()
+        if user_id:
+            return get_mattermost_user(user_id)
+        
+
 
 async def on_mattermost_message(e: MattermostEvent) -> None:
+    app_service = get_app_service()
+
     # Honor channels to ignore
     channel_id = e.broadcast['channel_id']
-    channel = get_mattermost_channel(channel_id) if channel_id else None
     if channel_id in config.mattermost.skip_channels:
         return
+    channel = get_mattermost_channel(channel_id) if channel_id else None
+    room_id = None
+    if channel:
+        # Not all events are associated with a channel
+        room_id, _ = await create_channel(channel_id)
 
     # Ignore own messages/events
-    user_id = e.broadcast['user_id']
+    user_id = e.get_mattermost_user_id()
+    if not user_id and e.event != 'posted':
+        # Events of type 'posted' have all the data in e.data
+        # which is why we can delegate to the other function
+        print(f'Warning: event {e.event} has no user ID!')
     if user_id == bot_user['id']:
         return
-
-    user = get_mattermost_user(user_id) if user_id else None
+    
+    # TODO: this would fail if someone signs up to Mattermost AFTER the download
+    # script has run. Think carefully about all the missing data cases.
+    user = e.get_mattermost_user()
+    user_mxid, user_api = None, None
+    if user:
+        user_mxid = await import_user(user_id)
+        user_api = app_service.intent(user_mxid)
 
     match e.event:
         case 'posted':
             print(f"{e.data['sender_name']} sent a message on {e.data['channel_display_name']}")
             # This is a regular message, or system message
             message = json.loads(e.data['post'])
-            room_id, already_existed = await create_channel(channel_id)
             await import_message(
                 message,
                 room_id,
@@ -68,6 +103,7 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
             )
         case 'post_edited':
             # TODO implement
+            # TODO test subsequent edits, they require different code
             pass
         case 'post_deleted':
             # TODO implement
@@ -80,13 +116,8 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
             # TODO implement
             pass
         case 'typing':
-            # broadcast -> user_id is not defined for some odd reason
-            # but broadcast -> user_id is (and parent_id)
-            user_id = e.broadcast['user_id']
-            user = get_mattermost_user(user_id) if user_id else None
-            # TODO implement
-            print(f"{user['username']} is typing on ")
-            pass
+            print(f"{user['username']} is typing on {channel['name']}")
+            await user_api.set_typing(room_id, 5000)
         case 'status_change':
             # TODO bridge
             status = e.data['status']

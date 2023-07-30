@@ -121,6 +121,9 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
 
     # Messages without a type are normal messages
     if not message['type'] or message['type'] == 'slack_attachment':
+        # We stop typing when we send a message
+        await user_api.set_typing(room_id, 0)
+
         matrix_thread_root = state.get_matrix_event(message['root_id'])
         # the second condition is needed because malfunctioning Mattermost bots may reply to a "System message"
         # which we do not consider a message (although they do have Matrix event IDs; I'm not sure if
@@ -161,6 +164,7 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
                 content,
                 timestamp=message['create_at']
             )
+            # TODO: if edited, edit it right after so it says edited
 
         # Handle media
         if 'files' in message['metadata']:

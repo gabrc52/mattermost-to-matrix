@@ -20,7 +20,7 @@ def get_mattermost_user(user_id):
     """
     results = [user for user in users if user['id'] == user_id]
     if not results:
-        # TODO: maybe this may arise if someone deleted their account
+        # TODO: download if not found
         raise ValueError(f'Inexistent Mattermost user ID {user_id}')
     return results[0]
 
@@ -84,6 +84,7 @@ async def import_user(user_id):
     username = user['username']
     mxid = get_bridged_user_mxid(username)
 
+    # TODO: download if not found
     filename = f"../downloaded/pfp/{user_id}"
     if os.path.exists(filename):
         with open(filename, 'rb') as f:
