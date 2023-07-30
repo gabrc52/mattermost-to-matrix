@@ -14,7 +14,7 @@ from config import config
 # naming/organization is unfortunate since we didn't plan for a bridge at the start
 from import_to_matrix.import_message import import_message
 from import_to_matrix.import_channel import get_mattermost_channel, create_channel
-from import_to_matrix.import_user import import_user
+from import_to_matrix.import_user import import_user, import_user_from_json
 from import_to_matrix.matrix import get_app_service, room_exists
 from import_to_matrix.not_in_mautrix import remove_reaction
 from import_to_matrix.message_state import MessageState
@@ -39,19 +39,18 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
 
     # Ignore own messages/events
     user_id = e.get_mattermost_user_id()
-    if not user_id and e.event != 'posted':
+    if not user_id and e.event not in ('posted', 'user_updated'):
         # Events of type 'posted' have all the data in e.data
         # which is why we can delegate to the other function
+        # Similarly for profile changes
         print(f'Warning: event {e.event} has no user ID!')
     if user_id == bot_user['id']:
         return
     
-    # TODO: this would fail if someone signs up to Mattermost AFTER the download
-    # script has run. Think carefully about all the missing data cases.
     user = e.get_mattermost_user()
     user_mxid, user_api = None, None
     if user:
-        user_mxid = await import_user(user_id)
+        user_mxid = await import_user_from_json(user)
         user_api = app_service.intent(user_mxid)
 
     match e.event:
@@ -108,11 +107,13 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
         case 'status_change':
             # TODO bridge
             status = e.data['status']
-            print(f"{user['username']} is {status} on {channel['name']}")
-        case 'user_update':
-            # TODO bridge
-            # Display name or profile picture change (or username!)
-            pass
+            print(f"{user['username']} is {status}")
+        case 'user_updated':
+            # Display name or profile picture change
+
+            # TODO: my setup assumes people do not change their username.
+            # Test what happens if someone does change their username.
+            await import_user_from_json(e.data['user'])
         case _:
             print(f"Ignoring unknown event type {e.event}")
         

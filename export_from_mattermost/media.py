@@ -15,6 +15,14 @@ def download_media(media_id):
         f.write(response.content)
 
 
+def get_profile_picture_bytes(user_id) -> bytes:
+    """
+    Gets the profile picture for the given user ID, as bytes
+    """
+    response = mm._get(f'/v4/users/{user_id}/image', raw=True)
+    return response.content
+
+
 def download_profile_picture(user_id):
     """
     Dumps the desired profile picture by user ID into a file inside the `pfp`
@@ -22,9 +30,8 @@ def download_profile_picture(user_id):
 
     Assumes the `pfp` folder already exists, and that the user has a profile picture.
     """
-    response = mm._get(f'/v4/users/{user_id}/image', raw=True)
     with open(f'../downloaded/pfp/{user_id}', 'wb') as f:
-        f.write(response.content)
+        f.write(get_profile_picture_bytes(user_id))
 
 
 def download_team_picture(team_id):
