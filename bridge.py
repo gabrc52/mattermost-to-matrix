@@ -8,14 +8,16 @@ import mattermost.ws
 from pprint import pprint
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
+import mautrix.errors
 
 from config import config
 
 # naming/organization is unfortunate since we didn't plan for a bridge at the start
-from import_to_matrix.import_message import import_message
+from import_to_matrix.import_message import import_message, get_emoji
 from import_to_matrix.import_channel import get_mattermost_channel, create_channel
 from import_to_matrix.import_user import get_mattermost_user, import_user
 from import_to_matrix.matrix import get_app_service, room_exists
+from import_to_matrix.not_in_mautrix import remove_reaction
 from import_to_matrix.message_state import MessageState
 from export_from_mattermost.login import mm
 
@@ -46,6 +48,9 @@ class MattermostEvent:
             return self.broadcast['user_id']
         if 'user_id' in self.data and self.data['user_id']:
             return self.data['user_id']
+        # Reactions have it elsewhere
+        if 'reaction' in self.data:
+            return json.loads(self.data['reaction'])['user_id']
     
     def get_mattermost_user(self):
         """
@@ -55,6 +60,16 @@ class MattermostEvent:
         user_id = self.get_mattermost_user_id()
         if user_id:
             return get_mattermost_user(user_id)
+        
+    def get_reaction(self):
+        """
+        Assumes this is a reaction event. Returns a tuple
+        with (mattermost message ID, reaction emoji)
+        """
+        assert 'reaction' in self.data
+        dict = json.loads(self.data['reaction'])
+        return dict['post_id'], get_emoji(dict['emoji_name'])
+
         
 
 
@@ -109,12 +124,20 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
             # TODO implement
             pass
         case 'reaction_added':
-            # TODO implement
-            # TODO refactor reaction code for DRY
-            pass
+            try:
+                post_id, emoji = e.get_reaction()
+                event_id = state.get_matrix_event(post_id)
+                await user_api.react(room_id, event_id, emoji)
+            except mautrix.errors.MatrixUnknownRequestError as error:
+                if error.errcode == 'M_DUPLICATE_ANNOTATION':
+                    # Silence errors where Mattermost tries to send the same reaction twice
+                    pass
+                else:
+                    raise error
         case 'reaction_removed':
-            # TODO implement
-            pass
+            post_id, emoji = e.get_reaction()
+            event_id = state.get_matrix_event(post_id)
+            await remove_reaction(user_api, room_id, event_id, emoji)
         case 'typing':
             print(f"{user['username']} is typing on {channel['name']}")
             await user_api.set_typing(room_id, 2000)

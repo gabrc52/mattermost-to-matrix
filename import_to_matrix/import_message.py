@@ -53,16 +53,28 @@ def remove_duplicates_special(tuples):
     return {(k[0], k[1], v) for k,v in helper_dict.items()}
 
 
+def get_emoji(emoji_name):
+    """
+    Get an emoji from a Mattermost emoji name
+    """
+    # Currently just use the name for custom reactions because Matrix does not have them yet
+    return emojis.get(emoji_name) or emoji_name
+
+
+def get_reaction(reaction):
+    """
+    From a Mattermost reaction, get a tuple
+    (Mattermost user ID, reaction, timestamp)
+    """
+    return (reaction['user_id'], get_emoji(reaction['emoji_name']), reaction['create_at'])
+
+
 def get_reactions(reactions):
     """
     From a Mattermost array of reactions, get a set of tuples as
     (Mattermost user ID, reaction, timestamp)
     """
-    return remove_duplicates_special({
-        # Currently just use the name for custom reactions because Matrix does not have them yet
-        (reaction['user_id'], emojis.get(reaction['emoji_name']) or reaction['emoji_name'], reaction['create_at'])
-        for reaction in reactions
-    })
+    return remove_duplicates_special({get_reaction(reaction) for reaction in reactions})
 
 
 async def import_message(message, room_id, topic_equivalent, thread_equivalent, state: MessageState, thread_sizes = None):
