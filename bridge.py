@@ -51,6 +51,10 @@ class MattermostEvent:
         # Reactions have it elsewhere
         if 'reaction' in self.data:
             return json.loads(self.data['reaction'])['user_id']
+        # Posts have it elsewhere
+        if 'post' in self.data:
+            return json.loads(self.data['post'])['user_id']
+
     
     def get_mattermost_user(self):
         """
@@ -121,8 +125,11 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
             # TODO test subsequent edits, they require different code
             pass
         case 'post_deleted':
-            # TODO implement
-            pass
+            # TODO: I know this will break when a Mattermost post goes to more than
+            # one Matrix message (https://github.com/matrix-org/matrix-spec/issues/541)
+            message = json.loads(e.data['post'])
+            event_id = state.get_matrix_event(message['id'])
+            await user_api.redact(room_id, event_id)
         case 'reaction_added':
             try:
                 post_id, emoji = e.get_reaction()
