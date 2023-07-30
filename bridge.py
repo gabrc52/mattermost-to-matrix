@@ -86,6 +86,9 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
                 content.set_edit(original_event_id)
                 event_id = await user_api.send_message(room_id, content)            
                 # Because the spec says that you cannot edit an edit, we do not store the event ID
+                if message['is_pinned']:
+                    # Unimportant bug: pinned messages will show as edited no matter what
+                    await user_api.pin_message(room_id, event_id)
         case 'reaction_added':
             try:
                 post_id, emoji = e.get_reaction()
