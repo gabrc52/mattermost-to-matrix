@@ -129,7 +129,7 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
         user_mxid = await import_user(message['user_id'])
         
     user_api = app_service.intent(user_mxid)
-    event_id = None # initialize event ID variable (rare case: no message, no attachments, nothing)
+    event_ids = []
 
     # Messages without a type are normal messages
     if not message['type'] or message['type'] == 'slack_attachment':
@@ -171,14 +171,14 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
             # set reply if needed
             set_reply_or_thread(content)
             # send message
-            event_id = await user_api.send_message(
+            event_ids.append(text_event_id := await user_api.send_message(
                 room_id,
                 content,
                 timestamp=message['create_at']
-            )
+            ))
             state.remember_matrix_text_event(
                 mattermost_id=message['id'],
-                matrix_id=event_id,
+                matrix_id=text_event_id,
             )
             # TODO: if edited, edit it right after so it says edited
 
@@ -211,13 +211,13 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
                     ) if is_image else BaseFileInfo(mimetype=file['mime_type'], size=file['size']),
                 )
                 set_reply_or_thread(content)
-                event_id = await user_api.send_message(room_id, content)
+                event_ids.append(await user_api.send_message(room_id, content))
 
         # Handle Slack attachments
         if message['type'] == 'slack_attachment' and 'attachments' in message['props']:
             print('Warning: Slack-type messages are not fully supported. Send an issue/PR if you want better support.', file=sys.stderr)
             for attachment in message['props']['attachments']:
-                event_id = await user_api.send_message(
+                event_ids.append(await user_api.send_message(
                     room_id,
                     TextMessageEventContent(
                         msgtype=MessageType.TEXT,
@@ -228,10 +228,17 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
                         format=Format.HTML,
                     ),
                     timestamp=message['create_at'],
-                )
+                ))
 
         # if there was no message sent, there is nothing left to do
-        if not event_id: return
+        if not event_ids: return
+
+        # Store the full list of event IDs
+        # We will need it for deletions
+        state.set_matrix_event_list(message['id'], event_ids)
+
+        # Get the last event ID
+        event_id = event_ids[-1]
 
         # store event ID
         state.remember_matrix_event(mattermost_id=message['id'], matrix_id=event_id)

@@ -68,14 +68,10 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
                 state=state,
             )
         case 'post_deleted':
-            # TODO: I know this will break when a Mattermost post goes to more than
-            # one Matrix message (https://github.com/matrix-org/matrix-spec/issues/541)
-            # A solution would be to store the full list of Matrix events for a given Mattermost ID
-            # instead of a one-to-one relationship
-
             message = json.loads(e.data['post'])
-            event_id = state.get_matrix_event(message['id'])
-            await user_api.redact(room_id, event_id)
+            event_ids = state.get_matrix_full_event_list(message['id'])
+            for event_id in event_ids:
+                await user_api.redact(room_id, event_id)            
         case 'post_edited':
             # We are assuming that people will only edit text messages
             # and only the message will change. It is not always true, for instance
