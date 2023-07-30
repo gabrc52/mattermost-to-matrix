@@ -117,7 +117,7 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
             pass
         case 'typing':
             print(f"{user['username']} is typing on {channel['name']}")
-            await user_api.set_typing(room_id, 5000)
+            await user_api.set_typing(room_id, 2000)
         case 'status_change':
             # TODO bridge
             status = e.data['status']
