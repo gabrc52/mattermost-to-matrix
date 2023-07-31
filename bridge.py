@@ -172,6 +172,17 @@ async def on_matrix_message(evt: MessageEvent, channel_id: str) -> None:
                 message = '!' + message
         else:
             message = evt.content.body
+        # deal with edits
+        edited_event_id = evt.content.get_edit()
+        if edited_event_id:
+            mm.patch_post(
+                state.get_mattermost_event(edited_event_id),
+                message
+            )
+            # TODO update db
+            # subsequent edits still have the original event ID in the "relates to"
+            # so maybe we don't need to
+            return # we're done
         # deal with threads
         matrix_thread_parent = evt.content.get_thread_parent()
         if matrix_thread_parent:
