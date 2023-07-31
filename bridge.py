@@ -7,7 +7,7 @@ import asyncio
 import mattermost.ws
 from pprint import pprint
 import mautrix.errors
-from mautrix.types import TextMessageEventContent, MessageType, PresenceState, MessageEvent, ReactionEvent, RedactionEvent, StateEvent, EventType
+from mautrix.types import TextMessageEventContent, MessageType, PresenceState, MessageEvent, ReactionEvent, RedactionEvent, StateEvent, EventType, MediaMessageEventContent
 from mautrix.appservice import AppService
 
 from util import config, is_bridged_user, matrix_to_mattermost_channel, get_mattermost_fake_user
@@ -170,7 +170,13 @@ async def on_matrix_message(evt: MessageEvent) -> None:
         print("Mattermost:", channel_id)
         # don't like that we're mixing async with sync stuff
         props = await get_mattermost_fake_user(api, evt.sender)
-        mm.create_post(channel_id, evt.content.body, props)
+        if isinstance(evt.content, MediaMessageEventContent):
+            message = f"[{evt.content.body}]({api.api.get_download_url(evt.content.url)})"
+            if evt.content.msgtype == MessageType.IMAGE:
+                message = '!' + message
+        else:
+            message = evt.content.body
+        mm.create_post(channel_id, message, props)
 
 
 async def on_matrix_state_event(evt: StateEvent):
