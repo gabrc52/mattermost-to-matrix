@@ -18,6 +18,7 @@ from import_to_matrix.not_in_mautrix import join_user_to_room, pin_message
 from export_from_mattermost.login import mm
 
 emojis: dict = json.load(open('../downloaded/emoji.json', 'r'))
+emojis_inverse: dict = json.load(open('../downloaded/emoji_inverse.json', 'r'))
 
 # https://stackoverflow.com/a/70921001/5031798
 # Remove <p> tags which don't play with Element Android
@@ -59,6 +60,13 @@ def get_emoji(emoji_name):
     """
     # Currently just use the name for custom reactions because Matrix does not have them yet
     return emojis.get(emoji_name) or emoji_name
+
+
+def get_emoji_name(emoji):
+    """
+    Get a Mattermost emoji name from an emoji, if any
+    """
+    return emojis_inverse.get(emoji)
 
 
 def get_reaction(reaction):

@@ -13,13 +13,13 @@ from mautrix.appservice import AppService
 from util import config, is_bridged_user, matrix_to_mattermost_channel, get_mattermost_fake_user, pin_mattermost_message, unpin_mattermost_message
 
 # naming/organization is unfortunate since we didn't plan for a bridge at the start
-from import_to_matrix.import_message import import_message
+from import_to_matrix.import_message import import_message, get_emoji_name
 from import_to_matrix.import_channel import get_mattermost_channel, create_channel
 from import_to_matrix.import_user import import_user, import_user_from_json
 from import_to_matrix.matrix import get_app_service, room_exists
 from import_to_matrix.not_in_mautrix import remove_reaction
 from import_to_matrix.message_state import MessageState
-from export_from_mattermost.login import mm
+from export_from_mattermost.login import mm, own_id
 from export_from_mattermost.mattermost_event import MattermostEvent
 
 import logging
@@ -198,8 +198,6 @@ async def on_matrix_message(evt: MessageEvent, channel_id: str) -> None:
 
 
 async def on_matrix_state_event(evt: StateEvent, channel_id):
-    api = app_service_listener.intent
-
     if evt.type == EventType.ROOM_MEMBER:
         # no need to join ghost users on the other side, since it's just a webhook
         pass
@@ -216,6 +214,27 @@ async def on_matrix_state_event(evt: StateEvent, channel_id):
         for event_id in newly_unpinned:
             post_id = state.get_mattermost_event(event_id)
             unpin_mattermost_message(mm, post_id)
+
+
+async def on_matrix_reaction(evt: ReactionEvent, channel_id):
+    # Since there is only one Mattermost user for all Mattermost users
+    # and webhooks can't react, there is loss of information (who reacted)
+    
+    # TODO: how do we bridge removing reactions?
+    # Only remove the singular reaction if every reaction has been removed?
+    # tbh it's rare enough I'll just not do anything right now
+
+    if evt.type == EventType.REACTION:
+        emoji = evt.content.relates_to.key
+        
+        matrix_message = evt.content.relates_to.event_id
+        post_id = state.get_mattermost_event(matrix_message)
+
+        emoji_name = get_emoji_name(emoji)
+        if emoji_name:
+            # Only react on Mattermost if there is an equivalent Mattermost reaction
+            mm.create_reaction(own_id, post_id, get_emoji_name(emoji))
+        
 
 
 async def on_matrix_event(evt: StateEvent):
@@ -238,6 +257,8 @@ async def on_matrix_event(evt: StateEvent):
         await on_matrix_message(evt, channel_id)
     elif isinstance(evt, StateEvent):
         await on_matrix_state_event(evt, channel_id)
+    elif isinstance(evt, ReactionEvent):
+        await on_matrix_reaction(evt, channel_id)
 
 
 
