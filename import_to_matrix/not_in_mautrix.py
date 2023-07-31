@@ -93,4 +93,11 @@ async def remove_reaction(user_api: IntentAPI, room_id, event_id, emoji):
     # Now we can redact it
     reaction = result[0]
     return await user_api.redact(room_id, reaction.event_id)
-    
+
+
+async def get_room_aliases(user_api: IntentAPI, room_id) -> list[str]:
+    response = await user_api.api.request(
+        Method.GET,
+        Path.v3.rooms[room_id].aliases
+    )
+    return response['aliases']

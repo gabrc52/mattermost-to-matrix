@@ -19,6 +19,7 @@ __app_service: AppServiceAPI = None
 # TODO: it might be cursed but if we initialize the AppServiceAPI
 # from the bridge, we might need a set_app_service to set this global
 # The problem is THAT is an IntentAPI and this is an AppServiceAPI
+# You can get an IntentAPI from an AppService API tho, so hmmm.
 
 def get_app_service():
     """
@@ -44,7 +45,6 @@ def get_app_service():
 
 def get_user_mxid_by_localpart(localpart):
     return f'@{localpart}:{config.matrix.homeserver}'
-
 
 def get_bridged_user_mxid(username):
     """

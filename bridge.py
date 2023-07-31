@@ -10,7 +10,7 @@ import mautrix.errors
 from mautrix.types import TextMessageEventContent, MessageType, PresenceState, MessageEvent, ReactionEvent, RedactionEvent, StateEvent, EventType
 from mautrix.appservice import AppService
 
-from config import config
+from util import config, is_bridged_user, matrix_to_mattermost_channel
 
 # naming/organization is unfortunate since we didn't plan for a bridge at the start
 from import_to_matrix.import_message import import_message
@@ -23,7 +23,10 @@ from export_from_mattermost.login import mm
 from export_from_mattermost.mattermost_event import MattermostEvent
 
 import logging
-logging.basicConfig(level=1)
+logging.basicConfig(
+    # Uncomment to have all our libraries dump loads of log lines
+    # level=1
+)
 
 bot_user = mm.get_user()
 state = MessageState()
@@ -50,7 +53,7 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
         print(f'Warning: event {e.event} has no user ID!')
     if user_id == bot_user['id']:
         return
-    
+
     user = e.get_mattermost_user()
     user_mxid, user_api = None, None
     if user:
@@ -152,15 +155,35 @@ def handler(mmws, event_data):
 
 
 async def on_matrix_message(evt: MessageEvent) -> None:
+    print(evt)
+    
+    api = app_service_listener.intent
+
     # so is it Event or any of the union types?
     # does it automatically only send it if the type matches?
     if evt.type == EventType.ROOM_MESSAGE:
-        print(f"{evt.sender} sent {evt.content} on {evt.room_id}")
+        # First, ignore our own messages
+        if is_bridged_user(evt.sender):
+            print("Ignoring")
+            return
+        channel_id = await matrix_to_mattermost_channel(mm, api, evt.room_id)
+        print("Mattermost:", channel_id)
+
+
+async def on_matrix_state_event(evt: StateEvent):
+    if evt.type == EventType.ROOM_MEMBER:
+        pass
+
 
 async def init_matrix_half():
     """
     Initializes the Matrix->Mattermost half of the bridge
     """
+    global app_service_listener
+    # Note that this lets you get the REST client, through the 
+    # `intent` method, so we have a duplicate REST client now.
+    # We should deal with it somehow. For now, we can keep using
+    # just the AppServiceAPI instead of the IntentAPI
     app_service_listener = AppService(
         server=config.matrix.homeserver_url,
         domain=config.matrix.homeserver,
@@ -174,11 +197,8 @@ async def init_matrix_half():
         host=config.matrix.listen_address,
         port=config.matrix.listen_port
     )
-    # Note that this lets you get the REST client, through the 
-    # `intent` method, so we have a duplicate REST client now.
-    # We should deal with it somehow. For now, we can keep using
-    # just the AppServiceAPI instead of the IntentAPI
     app_service_listener.matrix_event_handler(on_matrix_message)
+    app_service_listener.matrix_event_handler(on_matrix_state_event)
 
 
 # connect to websocket and start processing events
