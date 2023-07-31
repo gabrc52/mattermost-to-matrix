@@ -109,6 +109,9 @@ async def create_channel_from_json(channel):
     Creates a Mattermost channel with the given channel JSON into a Matrix room.
     Returns the room ID on Matrix
     """
+    app_service = get_app_service()
+    api = app_service.bot_intent()
+
     alias_localpart = get_alias_localpart_from_channel_json(channel)
     creator_mxid = await import_user(channel['creator_id']) if channel['creator_id'] else None
     power_level_override = {
@@ -136,7 +139,7 @@ async def create_channel_from_json(channel):
     if creator_mxid:
         power_level_override.setdefault('users', {})
         power_level_override['users'] |= {creator_mxid: 100}
-    return await create_room(
+    room_id, already_exists = await create_room(
         alias_localpart=alias_localpart,
         creator_mxid=creator_mxid,
         preset=RoomCreatePreset.PUBLIC,
@@ -144,6 +147,12 @@ async def create_channel_from_json(channel):
         power_level_override=power_level_override,
     )
     
+    # Send custom state event to more easily indicate what channel we are on
+    await api.send_state_event(room_id, 'edu.mit.sipb.mattermost', {
+        'channel_id': channel['id'],
+    })
+
+    return room_id, already_exists
 
 
 async def create_channel(channel_id):
