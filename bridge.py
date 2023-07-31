@@ -176,7 +176,13 @@ async def on_matrix_message(evt: MessageEvent) -> None:
                 message = '!' + message
         else:
             message = evt.content.body
-        post = mm.create_post(channel_id, message, props)
+        # deal with threads
+        matrix_thread_parent = evt.content.get_thread_parent()
+        if matrix_thread_parent:
+            mattermost_thread_parent = state.get_mattermost_event(matrix_thread_parent)
+            post = mm.create_post(channel_id, message, props, root_id=mattermost_thread_parent)
+        else:
+            post = mm.create_post(channel_id, message, props)
         state.remember_matrix_event(
             mattermost_id=post['id'],
             matrix_id=evt.event_id,
