@@ -149,4 +149,5 @@ def handler(mmws, event_data):
 # connect to websocket and start processing events
 mmws = mattermost.ws.MMws(handler, mm, f"wss://{config.mattermost.instance}/api/v4/websocket")
 
-while True: pass
+loop = asyncio.get_event_loop()
+loop.run_forever()
