@@ -160,6 +160,8 @@ async def on_matrix_message(evt: MessageEvent, channel_id: str) -> None:
     if evt.type == EventType.ROOM_MESSAGE:
         # don't like that we're mixing async with sync stuff
         props = await get_mattermost_fake_user(api, evt.sender)
+        # add matrix event ID to props
+        props |= {'matrix_event_id': evt.event_id}
         if isinstance(evt.content, MediaMessageEventContent):
             message = f"[{evt.content.body}]({api.api.get_download_url(evt.content.url)})"
             if evt.content.msgtype == MessageType.IMAGE:
