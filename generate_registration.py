@@ -22,9 +22,8 @@ registration = {
     },
     "rate_limited": False,
     "sender_localpart": config.matrix.username,
-
-    # This is not a bridge, at least for now. Just the backfill part so it does not need to *receive* messages
-    "url": None,
+    "url": f"http://{config.matrix.listen_address}:{config.matrix.listen_port}"
+           if config.matrix.enable_bridge else None,
 }
 
 # MIT-specific functionality: Claim Zephyr namespace as well to allow puppeting them

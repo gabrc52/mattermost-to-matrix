@@ -18,6 +18,13 @@ class MatrixConfig:
     # Homeserver URL, where you can actually reach the Matrix REST API
     homeserver_url: str
 
+    # Whether to enable the bridge (and include a URL in the registration file)
+    enable_bridge: bool
+
+    # Where the appservice should listen its REST API in
+    listen_address: str
+    listen_port: int
+
     # User MXIDs to add and give admin in created rooms or spaces
     users: list[str]
 

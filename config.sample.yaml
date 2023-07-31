@@ -46,6 +46,13 @@ matrix:
   # The homeserver URL, where you can actually reach the Matrix REST API
   homeserver_url: https://matrix-synapse.example.com
 
+  # Whether to enable the bridge at all
+  enable_bridge: false
+
+  # Where should the appservice host its REST API?
+  listen_address: 127.0.0.1
+  listen_port: 29782
+
   # User MXIDs to add and give admin in created rooms or spaces
   users:
     - "@admin:example.com"
