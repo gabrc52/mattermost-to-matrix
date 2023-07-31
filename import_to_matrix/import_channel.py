@@ -17,6 +17,7 @@ from import_to_matrix.import_user import import_user
 from import_to_matrix.matrix import (config, get_alias_mxid, get_app_service,
                     get_user_mxid_by_localpart, room_exists)
 from mautrix.types import RoomCreatePreset
+from mautrix.client.api.events import EventMethods
 from import_to_matrix.message_state import MessageState
 from progress.bar import Bar
 
@@ -148,7 +149,7 @@ async def create_channel_from_json(channel):
     )
     
     # Send custom state event to more easily indicate what channel we are on
-    await api.send_state_event(room_id, 'edu.mit.sipb.mattermost', {
+    await EventMethods.send_state_event(api, room_id, 'edu.mit.sipb.mattermost', {
         'channel_id': channel['id'],
     })
 
