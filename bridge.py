@@ -7,7 +7,8 @@ import asyncio
 import mattermost.ws
 from pprint import pprint
 import mautrix.errors
-from mautrix.types import TextMessageEventContent, MessageType, PresenceState
+from mautrix.types import TextMessageEventContent, MessageType, PresenceState, MessageEvent, ReactionEvent, RedactionEvent, StateEvent, EventType
+from mautrix.appservice import AppService
 
 from config import config
 
@@ -20,6 +21,9 @@ from import_to_matrix.not_in_mautrix import remove_reaction
 from import_to_matrix.message_state import MessageState
 from export_from_mattermost.login import mm
 from export_from_mattermost.mattermost_event import MattermostEvent
+
+import logging
+logging.basicConfig(level=1)
 
 bot_user = mm.get_user()
 state = MessageState()
@@ -138,6 +142,7 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
 
 # define a websocket handler
 def handler(mmws, event_data):
+    # TODO: remove
     with open('message.log', 'a+') as f:
         pprint(event_data, stream=f)
     # https://stackoverflow.com/questions/44630676/how-can-i-call-an-async-function-without-await
@@ -146,8 +151,39 @@ def handler(mmws, event_data):
     loop.create_task(on_mattermost_message(event))
 
 
-# connect to websocket and start processing events
-mmws = mattermost.ws.MMws(handler, mm, f"wss://{config.mattermost.instance}/api/v4/websocket")
+async def on_matrix_message(evt: MessageEvent) -> None:
+    # so is it Event or any of the union types?
+    # does it automatically only send it if the type matches?
+    if evt.type == EventType.ROOM_MESSAGE:
+        print(f"{evt.sender} sent {evt.content} on {evt.room_id}")
 
+async def init_matrix_half():
+    """
+    Initializes the Matrix->Mattermost half of the bridge
+    """
+    app_service_listener = AppService(
+        server=config.matrix.homeserver_url,
+        domain=config.matrix.homeserver,
+        as_token=config.matrix.as_token,
+        hs_token=config.matrix.hs_token,
+        bot_localpart=config.matrix.username,
+        id='mattermost',
+        bridge_name='mattermost',
+    )
+    await app_service_listener.start(
+        host=config.matrix.listen_address,
+        port=config.matrix.listen_port
+    )
+    # Note that this lets you get the REST client, through the 
+    # `intent` method, so we have a duplicate REST client now.
+    # We should deal with it somehow. For now, we can keep using
+    # just the AppServiceAPI instead of the IntentAPI
+    app_service_listener.matrix_event_handler(on_matrix_message)
+
+
+# connect to websocket and start processing events
+# This is enough to initialize the Mattermost->Matrix half
+mmws = mattermost.ws.MMws(handler, mm, f"wss://{config.mattermost.instance}/api/v4/websocket")
 loop = asyncio.get_event_loop()
+loop.create_task(init_matrix_half())
 loop.run_forever()
