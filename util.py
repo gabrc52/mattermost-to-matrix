@@ -61,6 +61,7 @@ async def get_mattermost_fake_user(matrix_api: IntentAPI, mxid):
         'override_username': localpart_or_full_mxid(mxid),
     }
     # override profile picture
+    # TODO respect room-specific profile pictures
     avatar_mxc = await matrix_api.get_avatar_url(mxid)
     if avatar_mxc:
         props['override_icon_url'] = str(matrix_api.api.get_download_url(

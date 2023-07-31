@@ -179,9 +179,10 @@ async def on_matrix_message(evt: MessageEvent, channel_id: str) -> None:
                 state.get_mattermost_event(edited_event_id),
                 message
             )
-            # TODO update db
+            # do we need to update the db?
             # subsequent edits still have the original event ID in the "relates to"
-            # so maybe we don't need to
+            # so maybe we don't need to, and for threads we also use the original event ID
+            # It looks like we don't
             return # we're done
         # deal with threads
         matrix_thread_parent = evt.content.get_thread_parent()
