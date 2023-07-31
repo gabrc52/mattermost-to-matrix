@@ -10,7 +10,7 @@ import mautrix.errors
 from mautrix.types import TextMessageEventContent, MessageType, PresenceState, MessageEvent, ReactionEvent, RedactionEvent, StateEvent, EventType, MediaMessageEventContent
 from mautrix.appservice import AppService
 
-from util import config, is_bridged_user, matrix_to_mattermost_channel, get_mattermost_fake_user
+from util import config, is_bridged_user, matrix_to_mattermost_channel, get_mattermost_fake_user, pin_mattermost_message, unpin_mattermost_message
 
 # naming/organization is unfortunate since we didn't plan for a bridge at the start
 from import_to_matrix.import_message import import_message
@@ -154,20 +154,10 @@ def handler(mmws, event_data):
     loop.create_task(on_mattermost_message(event))
 
 
-async def on_matrix_message(evt: MessageEvent) -> None:
-    print(evt)
-    
+async def on_matrix_message(evt: MessageEvent, channel_id: str) -> None:
     api = app_service_listener.intent
 
-    # so is it Event or any of the union types?
-    # does it automatically only send it if the type matches?
     if evt.type == EventType.ROOM_MESSAGE:
-        # First, ignore our own messages
-        if is_bridged_user(evt.sender):
-            print("Ignoring")
-            return
-        channel_id = await matrix_to_mattermost_channel(mm, api, evt.room_id)
-        print("Mattermost:", channel_id)
         # don't like that we're mixing async with sync stuff
         props = await get_mattermost_fake_user(api, evt.sender)
         if isinstance(evt.content, MediaMessageEventContent):
@@ -189,10 +179,46 @@ async def on_matrix_message(evt: MessageEvent) -> None:
         )
 
 
-async def on_matrix_state_event(evt: StateEvent):
+async def on_matrix_state_event(evt: StateEvent, channel_id):
+    api = app_service_listener.intent
+
     if evt.type == EventType.ROOM_MEMBER:
         # no need to join ghost users on the other side, since it's just a webhook
         pass
+    elif evt.type == EventType.ROOM_PINNED_EVENTS:
+        newly_pinned = set(evt.content.pinned) - set(evt.prev_content.pinned)
+        newly_unpinned = set(evt.prev_content.pinned) - set(evt.content.pinned)
+        # Bridge pins
+        for event_id in newly_pinned:
+            post_id = state.get_mattermost_event(event_id)
+            pin_mattermost_message(mm, post_id)
+        # Bridge unpins
+        for event_id in newly_unpinned:
+            post_id = state.get_mattermost_event(event_id)
+            unpin_mattermost_message(mm, post_id)
+
+
+async def on_matrix_event(evt: StateEvent):
+    """
+    runs common code for all matrix events
+    (checking that it is not ours, and getting the mattermost ID)
+    """
+    print(evt)
+    
+    # First, ignore our own messages
+    if is_bridged_user(evt.sender):
+        print("Ignoring")
+        return
+    
+    api = app_service_listener.intent
+    channel_id = await matrix_to_mattermost_channel(mm, api, evt.room_id)
+    print("Mattermost:", channel_id)
+
+    if isinstance(evt, MessageEvent):
+        await on_matrix_message(evt, channel_id)
+    elif isinstance(evt, StateEvent):
+        await on_matrix_state_event(evt, channel_id)
+
 
 
 async def init_matrix_half():
@@ -217,8 +243,7 @@ async def init_matrix_half():
         host=config.matrix.listen_address,
         port=config.matrix.listen_port
     )
-    app_service_listener.matrix_event_handler(on_matrix_message)
-    app_service_listener.matrix_event_handler(on_matrix_state_event)
+    app_service_listener.matrix_event_handler(on_matrix_event)
 
 
 # connect to websocket and start processing events

@@ -19,6 +19,7 @@ def get_profile_picture_bytes(user_id) -> bytes:
     """
     Gets the profile picture for the given user ID, as bytes
     """
+    # TODO: contribute to Python package
     response = mm._get(f'/v4/users/{user_id}/image', raw=True)
     return response.content
 

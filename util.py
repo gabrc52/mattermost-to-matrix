@@ -73,3 +73,18 @@ async def get_mattermost_fake_user(matrix_api: IntentAPI, mxid):
         props['webhook_display_name'] = display_name
     return props
     
+
+# TODO: contribute these 2 functoins upstream to the Mattermost API
+
+def pin_mattermost_message(mm_api: MMApi, post_id):
+    """
+    Pins a Mattermost message by post ID
+    """
+    mm_api._post(f'/v4/posts/{post_id}/pin')
+
+
+def unpin_mattermost_message(mm_api: MMApi, post_id):
+    """
+    Unpins the Mattermost message by post ID
+    """
+    mm_api._post(f'/v4/posts/{post_id}/unpin')
