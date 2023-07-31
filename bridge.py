@@ -10,7 +10,7 @@ import mautrix.errors
 from mautrix.types import TextMessageEventContent, MessageType, PresenceState, MessageEvent, ReactionEvent, RedactionEvent, StateEvent, EventType
 from mautrix.appservice import AppService
 
-from util import config, is_bridged_user, matrix_to_mattermost_channel
+from util import config, is_bridged_user, matrix_to_mattermost_channel, get_mattermost_fake_user
 
 # naming/organization is unfortunate since we didn't plan for a bridge at the start
 from import_to_matrix.import_message import import_message
@@ -169,11 +169,8 @@ async def on_matrix_message(evt: MessageEvent) -> None:
         channel_id = await matrix_to_mattermost_channel(mm, api, evt.room_id)
         print("Mattermost:", channel_id)
         # don't like that we're mixing async with sync stuff
-        mm.create_post(channel_id, evt.content.body, {
-            'from_webhook': 'true',
-            'from_matrix': 'true',
-            'override_username': evt.sender,
-        })
+        props = await get_mattermost_fake_user(api, evt.sender)
+        mm.create_post(channel_id, evt.content.body, props)
 
 
 async def on_matrix_state_event(evt: StateEvent):

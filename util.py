@@ -36,4 +36,40 @@ async def matrix_to_mattermost_channel(mm_api: MMApi, matrix_api: IntentAPI, roo
                 team = [team for team in teams if team['name'] == team_name][0]
                 channel = mm_api.get_channel_by_name(team['id'], channel_name)
                 return channel['id']
+
+
+def localpart_or_full_mxid(mxid):
+    """
+    Given a username, get a localpart if local,
+    or the full MXID if remote
+    """
+    localpart, homeserver = mxid[1:].split(':')
+    if homeserver == config.matrix.homeserver:
+        return localpart
+    else:
+        return mxid
+    
+
+async def get_mattermost_fake_user(matrix_api: IntentAPI, mxid):
+    """
+    Given a Matrix MXID, get the Mattermost props
+    needed to impersonate it
+    """
+    props = {
+        'from_webhook': 'true',
+        'from_matrix': 'true',
+        'override_username': localpart_or_full_mxid(mxid),
+    }
+    # override profile picture
+    avatar_mxc = await matrix_api.get_avatar_url(mxid)
+    if avatar_mxc:
+        props['override_icon_url'] = matrix_api.api.get_download_url(
+            avatar_mxc,
+            download_type='thumbnail'
+        )
+    # (attempt to) override display name
+    display_name = await matrix_api.get_displayname(mxid)
+    if display_name:
+        props['webhook_display_name'] = display_name
+    return props
     
