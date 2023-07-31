@@ -66,7 +66,7 @@ async def get_mattermost_fake_user(matrix_api: IntentAPI, mxid):
         props['override_icon_url'] = str(matrix_api.api.get_download_url(
             avatar_mxc,
             download_type='thumbnail'
-        ))
+        )) + '?width=128&height=128'
     # (attempt to) override display name
     display_name = await matrix_api.get_displayname(mxid)
     if display_name:
