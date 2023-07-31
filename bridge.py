@@ -176,11 +176,16 @@ async def on_matrix_message(evt: MessageEvent) -> None:
                 message = '!' + message
         else:
             message = evt.content.body
-        mm.create_post(channel_id, message, props)
+        post = mm.create_post(channel_id, message, props)
+        state.remember_matrix_event(
+            mattermost_id=post['id'],
+            matrix_id=evt.event_id,
+        )
 
 
 async def on_matrix_state_event(evt: StateEvent):
     if evt.type == EventType.ROOM_MEMBER:
+        # no need to join ghost users on the other side, since it's just a webhook
         pass
 
 
