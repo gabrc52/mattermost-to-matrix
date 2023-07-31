@@ -52,6 +52,10 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
         # Similarly for profile changes
         print(f'Warning: event {e.event} has no user ID!')
     if user_id == bot_user['id']:
+        # TODO: in this scenario, we need to bridge pins
+        # (if someone on mattermost bridged a matrix message)
+        # they show up as post_edited. But how can we detect this compared
+        # to edits? we could pin or unpin either way and swallow the exception
         return
 
     user = e.get_mattermost_user()
@@ -188,6 +192,8 @@ async def on_matrix_state_event(evt: StateEvent, channel_id):
         # no need to join ghost users on the other side, since it's just a webhook
         pass
     elif evt.type == EventType.ROOM_PINNED_EVENTS:
+        # TODO: not done implementing pins and unpins from either side
+        # it is buggy still
         newly_pinned = set(evt.content.pinned) - set(evt.prev_content.pinned)
         newly_unpinned = set(evt.prev_content.pinned) - set(evt.content.pinned)
         # Bridge pins
