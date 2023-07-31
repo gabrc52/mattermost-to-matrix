@@ -234,6 +234,8 @@ async def on_matrix_reaction(evt: ReactionEvent, channel_id):
         if emoji_name:
             # Only react on Mattermost if there is an equivalent Mattermost reaction
             mm.create_reaction(own_id, post_id, get_emoji_name(emoji))
+        else:
+            print("Warning: could not find an equivalent reaction to", emoji)
         
 
 
