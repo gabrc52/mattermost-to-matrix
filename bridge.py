@@ -236,7 +236,13 @@ async def on_matrix_reaction(evt: ReactionEvent, channel_id):
             mm.create_reaction(own_id, post_id, get_emoji_name(emoji))
         else:
             print("Warning: could not find an equivalent reaction to", emoji)
-        
+
+
+async def on_matrix_deletion(evt: RedactionEvent, channel_id):
+    if evt.type == EventType.ROOM_REDACTION:
+        redacted_id = evt.redacts
+        mattermost_post = state.get_mattermost_event(redacted_id)
+        mm.delete_post(mattermost_post)
 
 
 async def on_matrix_event(evt: StateEvent):
@@ -261,7 +267,8 @@ async def on_matrix_event(evt: StateEvent):
         await on_matrix_state_event(evt, channel_id)
     elif isinstance(evt, ReactionEvent):
         await on_matrix_reaction(evt, channel_id)
-
+    elif isinstance(evt, RedactionEvent):
+        await on_matrix_deletion(evt, channel_id) 
 
 
 async def init_matrix_half():
