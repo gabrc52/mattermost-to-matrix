@@ -16,6 +16,10 @@ from config import config
 # Let only one instance exist
 __app_service: AppServiceAPI = None
 
+# TODO: it might be cursed but if we initialize the AppServiceAPI
+# from the bridge, we might need a set_app_service to set this global
+# The problem is THAT is an IntentAPI and this is an AppServiceAPI
+
 def get_app_service():
     """
     Creates an object of type AppServiceAPI with our configuration, if it has not been created yet,
@@ -33,7 +37,7 @@ def get_app_service():
         token=config.matrix.as_token,
         # The log and state_store are needed even if AppServiceAPI technically accepts leaving it blank
         log=TraceLogger('log'),
-        state_store=state_store.FileASStateStore(path='mx-state.json', binary=False),
+        state_store=state_store.FileASStateStore(path='mau-state.json', binary=False),
     )
     return __app_service    
 
