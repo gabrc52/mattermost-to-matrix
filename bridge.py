@@ -23,10 +23,8 @@ from export_from_mattermost.login import mm, own_id
 from export_from_mattermost.mattermost_event import MattermostEvent
 
 import logging
-logging.basicConfig(
-    # Uncomment to have all our libraries dump loads of log lines
-    # level=1
-)
+if config.debug:
+    logging.basicConfig(level=1)
 
 bot_user = mm.get_user()
 state = MessageState()

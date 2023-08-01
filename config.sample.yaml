@@ -1,3 +1,6 @@
+# Uncomment to print more stuff
+# debug: true
+
 # Whether to bridge usernames instead of display names, even if a full
 # display name is available
 prefer_usernames: false

@@ -111,6 +111,7 @@ class Config:
     mattermost: MattermostConfig
     matrix: MatrixConfig
     prefer_usernames: bool = False
+    debug: bool = False
 
 
 config: Config = Config.from_dict(yaml.load(open("config.yaml", "r"), yaml.Loader))
