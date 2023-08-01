@@ -44,6 +44,10 @@ class MatrixConfig:
     # and {platform} with Mattermost or Zephyr accordingly
     display_name_format: Optional[str] = "{name} - {platform}"
 
+    # List of channels to always thread, regardless of the below options
+    always_thread: Optional[tuple[str]] = ()
+
+
 
 @dataclass_json
 @dataclass
@@ -67,9 +71,6 @@ class MattermostBackfillConfig:
     # the Mattermost thread to use a Matrix thread instead of a Matrix reply?
     thread_threshold: int = 3
 
-    # List of channels to always thread, regardless of the above options
-    always_thread: tuple[str] = ()
-
 
 @dataclass_json
 @dataclass
@@ -79,6 +80,9 @@ class MattermostBridgeConfig:
 
     # Similar to thread_equivalent above, but 'auto' is disallowed
     thread_equivalent: Literal["thread", "reply"] = "thread"
+
+    # List of users to ignore when bridging
+    ignore_users: tuple[str] = ()
 
 
 @dataclass_json

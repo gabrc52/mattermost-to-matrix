@@ -108,7 +108,7 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
             thread_equivalent = 'reply'
         assert thread_equivalent in ('thread', 'reply')
     # Honor the "always thread" option
-    if message['channel_id'] in config.mattermost.backfill.always_thread:
+    if message['channel_id'] in config.mattermost.always_thread:
         thread_equivalent = 'thread'
 
     app_service = get_app_service()

@@ -58,6 +58,10 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
         # to edits? we could pin or unpin either way and swallow the exception
         return
 
+    # Honor ignore-list
+    if user_id in config.mattermost.bridge.ignore_users:
+        return
+
     user = e.get_mattermost_user()
     user_mxid, user_api = None, None
     if user:

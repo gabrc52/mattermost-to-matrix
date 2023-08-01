@@ -8,8 +8,15 @@ mattermost:
   instance: mattermost.example.com
   # Uncomment to skip some channels from the export
   # skip_channels:
-  #   - "po9ucmm6wirjbnc3irjybc333y"
+  #   - po9ucmm6wirjbnc3irjybc333y
 
+  # List of channels to always thread, regardless of the below options
+  # always_thread:
+  #   - 8qztonpgkf8gffqddckrkpfyic
+  #   - pb7dp9psgpywuj567h73fdnxnr
+  #   - oi8nnwbn3trfjgc5cntzqc6ucc
+
+  # These settings only apply when importing messages at once
   backfill:
     # What to backfill as a Matrix "topic". Accepted options are 'header' or 'purpose'
     # to use those Mattermost fields, 'both' to treat either header changes or purpose
@@ -27,13 +34,8 @@ mattermost:
     # If you chose 'auto', what is the minimum number of messages to use a thread instead
     # of replies?
     # thread_threshold: 3
-
-    # List of channels to always thread, regardless of the above options
-    # always_thread:
-    #   - 8qztonpgkf8gffqddckrkpfyic
-    #   - pb7dp9psgpywuj567h73fdnxnr
-    #   - oi8nnwbn3trfjgc5cntzqc6ucc
   
+  # These settings only apply when bridging messages in real time
   bridge:
     # Similarly, what to bridge as a Matrix "topic".
     # Accepted options are 'header', 'purpose' and 'both' but not 'auto'
@@ -42,6 +44,12 @@ mattermost:
     # Similarly, how to bridge Mattermost threads to Matrix
     # Accepted options are 'reply' and 'thread', but not 'auto'
     thread_equivalent: thread
+
+    # Uncomment to ignore some users while bridging,
+    # for instance to avoid double-bridging messages from
+    # other bridge bots
+    # ignore_users:
+    #   - buz8ctq6rirz9f48kf4gqopkqa
 
 
 matrix:
