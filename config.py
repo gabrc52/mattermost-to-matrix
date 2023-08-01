@@ -44,10 +44,6 @@ class MatrixConfig:
     # and {platform} with Mattermost or Zephyr accordingly
     display_name_format: Optional[str] = "{name} - {platform}"
 
-    # List of channels to always thread, regardless of the below options
-    always_thread: Optional[tuple[str]] = ()
-
-
 
 @dataclass_json
 @dataclass
@@ -97,6 +93,9 @@ class MattermostConfig:
 
     # Channel IDs to skip exporting
     skip_channels: tuple[str] = ()
+
+    # List of channels to always thread, regardless of the above options
+    always_thread: Optional[tuple[str]] = ()
 
 
 @dataclass_json
