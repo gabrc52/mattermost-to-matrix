@@ -49,10 +49,11 @@ def localpart_or_full_mxid(mxid):
         return mxid
     
 
-async def get_mattermost_fake_user(matrix_api: IntentAPI, mxid):
+async def get_mattermost_fake_user(matrix_api: IntentAPI, mxid, room_id):
     """
     Given a Matrix MXID, get the Mattermost props
-    needed to impersonate it
+    needed to impersonate it, using the local profile picture or display name
+    for the specified room
     """
     props = {
         'from_webhook': 'true',
@@ -61,15 +62,17 @@ async def get_mattermost_fake_user(matrix_api: IntentAPI, mxid):
         'override_username': localpart_or_full_mxid(mxid),
     }
     # override profile picture
-    # TODO respect room-specific profile pictures
-    avatar_mxc = await matrix_api.get_avatar_url(mxid)
+    avatar_mxc = await matrix_api.get_room_avatar_url(room_id, mxid)
     if avatar_mxc:
         props['override_icon_url'] = str(matrix_api.api.get_download_url(
             avatar_mxc,
             download_type='thumbnail'
         )) + '?width=128&height=128'
     # (attempt to) override display name
-    display_name = await matrix_api.get_displayname(mxid)
+    try:
+        display_name = await matrix_api.get_room_displayname(room_id, mxid)
+    except:
+        display_name = None
     if display_name:
         props['webhook_display_name'] = display_name
     return props
