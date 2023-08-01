@@ -57,6 +57,7 @@ async def get_mattermost_fake_user(matrix_api: IntentAPI, mxid):
     props = {
         'from_webhook': 'true',
         'from_matrix': 'true',
+        'from_bot': 'true',
         'override_username': localpart_or_full_mxid(mxid),
     }
     # override profile picture
