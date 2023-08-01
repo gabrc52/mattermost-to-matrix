@@ -86,6 +86,11 @@ matrix:
   #   Examples: "[{platform}] {name}", "{name}" for "[Mattermost] Gabriel R." and "Gabriel R."
   display_name_format: "{name} - {platform}"
 
+  # List of prefixes to ignore for user MXIDs, to avoid
+  # double-bridging messages from other bridges
+  bridge_ignore_user_prefixes:
+    - _zephyr_
+
   # Prefix to use for aliases; uncomment to change
   # room_prefix: _mattermost_
 

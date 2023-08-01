@@ -28,6 +28,10 @@ class MatrixConfig:
     # User MXIDs to add and give admin in created rooms or spaces
     users: list[str]
 
+    # List of prefixes to ignore for user MXIDs, to avoid
+    # double-bridging messages from other bridges
+    bridge_ignore_user_prefixes: Optional[tuple[str]] = ()
+
     # Prefix to use for aliases
     room_prefix: Optional[str] = "_mattermost_"
 

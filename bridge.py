@@ -260,6 +260,12 @@ async def on_matrix_event(evt: StateEvent):
         print("Ignoring")
         return
     
+    # Honor ignored prefixes
+    for prefix in config.matrix.bridge_ignore_user_prefixes:
+        if evt.sender[1:].startswith(prefix):
+            print("Ignoring - other bridge")
+            return
+    
     api = app_service_listener.intent
     channel_id = await matrix_to_mattermost_channel(mm, api, evt.room_id)
     print("Mattermost:", channel_id)
