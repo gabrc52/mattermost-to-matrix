@@ -19,7 +19,9 @@ from import_to_matrix.matrix import (config, get_alias_mxid, get_app_service,
 from mautrix.types import RoomCreatePreset
 from mautrix.client.api.events import EventMethods
 from import_to_matrix.message_state import MessageState
+from export_from_mattermost.login import mm
 from progress.bar import Bar
+from mattermost import ApiException
 
 if not os.path.exists('../downloaded/channels.json'):
     print(f'channels.json not found! Run export_channel_list.py first.', file=sys.stderr)
@@ -34,7 +36,7 @@ def get_mattermost_channel(channel_id):
     """
     results = [channel for channel in channels if channel['id'] == channel_id]
     if not results:
-        raise ValueError('Inexistent Mattermost channel ID')
+        return mm.get_channel(channel_id)
     return results[0]
 
 def get_alias_localpart(team, channel):
