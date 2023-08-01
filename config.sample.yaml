@@ -33,6 +33,15 @@ mattermost:
     #   - 8qztonpgkf8gffqddckrkpfyic
     #   - pb7dp9psgpywuj567h73fdnxnr
     #   - oi8nnwbn3trfjgc5cntzqc6ucc
+  
+  bridge:
+    # Similarly, what to bridge as a Matrix "topic".
+    # Accepted options are 'header', 'purpose' and 'both' but not 'auto'
+    topic_equivalent: both
+
+    # Similarly, how to bridge Mattermost threads to Matrix
+    # Accepted options are 'reply' and 'thread', but not 'auto'
+    thread_equivalent: thread
 
 
 matrix:

@@ -73,12 +73,23 @@ class MattermostBackfillConfig:
 
 @dataclass_json
 @dataclass
+class MattermostBridgeConfig:
+    # Similar to topic_equivalent above, but 'auto' is disallowed
+    topic_equivalent: Literal["header", "purpose", "both"]
+
+    # Similar to thread_equivalent above, but 'auto' is disallowed
+    thread_equivalent: Literal["thread", "reply"]
+
+
+@dataclass_json
+@dataclass
 class MattermostConfig:
     username: str
     password: str
     instance: str
 
     backfill: MattermostBackfillConfig
+    bridge: MattermostBridgeConfig
 
     # Channel IDs to skip exporting
     skip_channels: tuple[str] = ()

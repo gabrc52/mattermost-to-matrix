@@ -72,9 +72,8 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
             await import_message(
                 message,
                 room_id,
-                # TODO: don't hardcode and add to config (w/o auto)
-                topic_equivalent='both',
-                thread_equivalent='thread', # wait, 'reply' would work trivially, just not 'auto'
+                topic_equivalent=config.mattermost.bridge.topic_equivalent,
+                thread_equivalent=config.mattermost.bridge.thread_equivalent,
                 state=state,
             )
         case 'post_deleted':
