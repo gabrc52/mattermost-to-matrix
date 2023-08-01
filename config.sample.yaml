@@ -3,8 +3,13 @@
 prefer_usernames: false
 
 mattermost:
+  # Two ways to log-in. Either option works just as well.
+  # 1. Username and password (for regular account)
   username: matrix@example.com
   password: hunter2
+  # 2. Access token (get from Integrations -> Bots)
+  token: yourtokenwouldgohere
+
   instance: mattermost.example.com
   # Uncomment to skip some channels from the export
   # skip_channels:

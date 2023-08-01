@@ -88,8 +88,6 @@ class MattermostBridgeConfig:
 @dataclass_json
 @dataclass
 class MattermostConfig:
-    username: str
-    password: str
     instance: str
 
     backfill: MattermostBackfillConfig
@@ -100,6 +98,11 @@ class MattermostConfig:
 
     # List of channels to always thread, regardless of the above options
     always_thread: Optional[tuple[str]] = ()
+
+    username: Optional[str] = None
+    password: Optional[str] = None
+    token: Optional[str] = None
+
 
 
 @dataclass_json
