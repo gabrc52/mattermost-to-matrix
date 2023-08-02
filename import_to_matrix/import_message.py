@@ -219,7 +219,7 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
                     ) if is_image else BaseFileInfo(mimetype=file['mime_type'], size=file['size']),
                 )
                 set_reply_or_thread(content)
-                event_ids.append(await user_api.send_message(room_id, content))
+                event_ids.append(await user_api.send_message(room_id, content, timestamp=message['create_at']))
 
         # Handle Slack attachments
         if message['type'] == 'slack_attachment' and 'attachments' in message['props']:
