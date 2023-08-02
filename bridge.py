@@ -266,6 +266,11 @@ async def on_matrix_event(evt: StateEvent):
     
     api = app_service_listener.intent
     channel_id = await matrix_to_mattermost_channel(mm, api, evt.room_id)
+    
+    if not channel_id:
+        print("Ignoring unknown room", evt.room_id)
+        return
+    
     print("Mattermost:", channel_id)
 
     if isinstance(evt, MessageEvent):
