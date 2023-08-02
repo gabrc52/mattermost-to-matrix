@@ -31,7 +31,7 @@ app_service_config_files:
 
 6. If all you wish is to migrate your messages, once that's done, you can revert the changes you made to your Synapse `config.yaml` or `conf.d`, since it is a good idea to revoke unused credentials.
 
-7. If you wish to use the bridge, you should change `enable_bridge: true` in the config, and re-regenerate the registration file, then edit the file in Synapse's config. The URL field at the bottom will change.
+7. If you wish to use the bridge, you should change `enable_bridge: true` in the config, and re-regenerate the registration file, then edit the file in Synapse's config, then restart Syanpse. The URL field at the bottom will change.
 
 8. You can now start `bridge.py` and keep it always running (e.g. through a systemd unit) to use the bridge.
 
