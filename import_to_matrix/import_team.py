@@ -82,6 +82,8 @@ async def import_team(team_name):
     # spec on spaces: https://spec.matrix.org/v1.7/client-server-api/#spaces
 
     for channel_id in channels:
+        if channel_id in config.mattermost.skip_channels:
+            continue
         room_id = await import_channel(channel_id)
         await api.send_state_event(team_id, EventType.SPACE_CHILD, SpaceChildStateEventContent(via=[config.matrix.homeserver]), room_id)
         await api.send_state_event(room_id, EventType.SPACE_PARENT, SpaceParentStateEventContent(via=[config.matrix.homeserver]), team_id)
