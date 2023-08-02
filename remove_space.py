@@ -62,7 +62,10 @@ async def kick_everyone(room_id):
         try:
             await api.kick_user(room_id, user_id)
         except mautrix.errors.request.MForbidden as e:
-            print(user_id, e)
+            try:
+                await app_service.intent(user_id).leave_room(room_id)
+            except Exception as e:
+                print(user_id, e)
     # Leave as the bot
     await api.leave_room(room_id)
 
