@@ -14,7 +14,7 @@ You don't need a bot account or admin access on the Mattermost side to use this 
 
 1. Copy `config.sample.yaml` to `config.yaml` and edit with your own settings.
 
-> Important Note: If you wish to migrate messages and use this as a bridge as well, please leave `enable_bridge: false`. You can set it to `true` once you start the bridge.
+> Important Note: If you wish to migrate messages and use this as a bridge as well, please leave `enable_bridge: false`. You can set it to `true` after you finish message migration and before you start the bridge.
 
 2. Export your Mattermost data using the helper script: `export_from_mattermost/download_everything.sh`. For more info about specific things that you can export, see [export_from_mattermost/README.md](export_from_mattermost/README.md), 
 
