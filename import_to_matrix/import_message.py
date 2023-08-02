@@ -133,6 +133,9 @@ async def import_message(message, room_id, topic_equivalent, thread_equivalent, 
         # note that even mattermost itself uses the pfp of the user who created the webhook
         # if "Enable integrations to override profile picture icons" is disabled
         await create_user(user_mxid, display_name)
+
+        # add user to the room, otherwise the join timestamp will be wrong...
+        await join_user_to_room(user_mxid, room_id, timestamp=message['create_at'])
     else:
         user_mxid = await import_user(message['user_id'])
         
