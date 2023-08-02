@@ -7,7 +7,7 @@ from config import config
 registration = {
     "as_token": config.matrix.as_token,
     "hs_token": config.matrix.hs_token,
-    "id": "Mattermost migration tool",
+    "id": "Mattermost",
     "namespaces": {
         # There is no need to keep the namespaces exclusive, because an actual bridge
         # might want to reuse them
