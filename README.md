@@ -70,7 +70,7 @@ Because I didn't/haven't implemented them (PRs are welcome):
 * Pinning a Mattermost message from Matrix (#16)
 * Some emoji reactions may not work due to emoji variation selectors (#17)
 * Presence / online status
-* Deletions from Mattermost->Matrix when the message contains multiple attachments
+* Deleting Mattermost messages from Matrix when they have attachments
 * Room name changes, or other team changes
 
 Due to platform differences:
