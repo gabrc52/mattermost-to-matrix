@@ -39,7 +39,7 @@ app_service_config_files:
 
 This program aims to preserve as much as possible fidelity from Mattermost to Matrix
 
-* Display names and profile picture changes 
+* User display name and profile picture changes 
 * Mattermost team -> Matrix space (public channels only)
 * Rich text messages (most but not all Markdown features)
 * Images and other attachments
@@ -71,6 +71,7 @@ Because I didn't/haven't implemented them (PRs are welcome):
 * Some emoji reactions may not work due to emoji variation selectors (#17)
 * Presence / online status
 * Deletions from Mattermost->Matrix when the message contains multiple attachments
+* Room name changes, or other team changes
 
 Due to platform differences:
 
