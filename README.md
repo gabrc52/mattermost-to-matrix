@@ -66,7 +66,7 @@ Because I didn't/haven't implemented them (PRs are welcome):
     * Lists without any newline between any preceding text and the start of the list
     * Inline emojis (#15)
     * LaTeX
-    * Mentions*
+    * Mentions
 * Pinning a Mattermost message from Matrix (#16)
 * Some emoji reactions may not work due to emoji variation selectors (#17)
 * Presence / online status
