@@ -56,8 +56,9 @@ async def on_mattermost_message(e: MattermostEvent) -> None:
         # to edits? we could pin or unpin either way and swallow the exception
         return
 
-    # Honor ignore-list
-    if user_id in config.mattermost.bridge.ignore_users:
+    # Honor ignore-list (and exceptions)
+    if user_id in config.mattermost.bridge.ignore_users \
+        and channel_id not in config.mattermost.bridge.ignore_users_whitelist:
         return
 
     user = e.get_mattermost_user()
@@ -164,7 +165,7 @@ async def on_matrix_message(evt: MessageEvent, channel_id: str) -> None:
 
     if evt.type == EventType.ROOM_MESSAGE:
         # don't like that we're mixing async with sync stuff
-        props = await get_mattermost_fake_user(api, evt.sender, evt.room_id)
+        props = await get_mattermost_fake_user(api, evt.sender, evt.room_id, channel_id)
         # add matrix event ID to props
         props |= {'matrix_event_id': evt.event_id}
         if isinstance(evt.content, MediaMessageEventContent):

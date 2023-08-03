@@ -49,7 +49,7 @@ def localpart_or_full_mxid(mxid):
         return mxid
     
 
-async def get_mattermost_fake_user(matrix_api: IntentAPI, mxid, room_id):
+async def get_mattermost_fake_user(matrix_api: IntentAPI, mxid, room_id, channel_id):
     """
     Given a Matrix MXID, get the Mattermost props
     needed to impersonate it, using the local profile picture or display name
@@ -61,6 +61,13 @@ async def get_mattermost_fake_user(matrix_api: IntentAPI, mxid, room_id):
         'from_bot': 'true',
         'override_username': localpart_or_full_mxid(mxid),
     }
+    # If we are on the mm2zephyr exceptions, don't include "from_bot"
+    # (For users using the whitelist for other purposes, whether the from_bot key
+    # is present or not should not affect usage of this bot, since I believe
+    # other bots don't set it or read it in the first place)
+    if channel_id in config.mattermost.bridge.ignore_users_whitelist:
+        del props['from_bot']
+
     # override profile picture
     avatar_mxc = await matrix_api.get_room_avatar_url(room_id, mxid)
     if avatar_mxc:

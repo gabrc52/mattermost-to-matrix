@@ -84,6 +84,9 @@ class MattermostBridgeConfig:
     # List of users to ignore when bridging
     ignore_users: tuple[str] = ()
 
+    # List of channels to disable this ignore list on
+    ignore_users_whitelist: tuple[str] = ()
+
 
 @dataclass_json
 @dataclass

@@ -59,6 +59,12 @@ mattermost:
     # ignore_users:
     #   - buz8ctq6rirz9f48kf4gqopkqa
 
+    # If you don't wish to apply this ignore list on certain
+    # channels, do it here:
+    # ignore_users_whitelist:
+    #   - 8qztonpgkf8gffqddckrkpfyic
+    #   - pb7dp9psgpywuj567h73fdnxnr
+
 
 matrix:
   # See https://spec.matrix.org/v1.6/application-service-api/#registration
