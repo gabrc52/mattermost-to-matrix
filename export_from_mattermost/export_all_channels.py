@@ -25,9 +25,6 @@ for channel in channels:
         print('   skipping')
         continue
 
-    # Join if necessary
-    mm.add_user_to_channel(channel['id'], own_id)
-
     # Download channel
     export_channel(channel['id'])
 

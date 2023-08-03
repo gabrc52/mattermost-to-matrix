@@ -13,6 +13,9 @@ def export_channel(channel_id):
     If the JSON file already exists, it updates it to add the newest messages
     Note that edits are not reflected.
     """
+    # Join if necessary
+    mm.add_user_to_channel(channel_id, own_id)
+
     filename = f'../downloaded/messages/{channel_id}.json'
 
     if os.path.exists(filename):
