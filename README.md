@@ -35,6 +35,21 @@ app_service_config_files:
 
 8. You can now start `bridge.py` and keep it always running (e.g. through a systemd unit) to use the bridge.
 
+## How to bridge private channels?
+
+To bridge a private channel, all you need is to add the bot to the private channel. If you wish to backfill, manually run:
+
+```
+$ cd export_from_mattermost
+$ python export_channel.py [channel ID on mattermost]
+$ cd ..
+$ python import_to_matrix/import_channel.py [channel ID]
+```
+
+If the channel gets created before you run the import, set `matrix` -> `skip_existing` to `false` on `config.yaml`, or remove the aliases from the existing channel so the bot doesn't see it. Then, run the import script again.
+
+However, currently it will be bridged as a public channel on Matrix, so anyone who knows the link can join. You can set it to invite-only if the membership will not change. **Private channels are still WIP.**
+
 ## What's supported
 
 This program aims to preserve as much as possible fidelity from Mattermost to Matrix
