@@ -45,7 +45,7 @@ def get_displayname(user: dict):
         return full_name
 
 
-async def create_user(mxid, display_name, avatar_mxc=None, avatar_bytes=None, avatar_filename=None):
+async def create_user(mxid, display_name, avatar_mxc=None, avatar_bytes=None, avatar_filename=None, is_zephyr=False):
     """
     Creates a matrix user with the given mxid, display name
     and avatar (either mxc or bytes). If avatar_bytes is specified,
@@ -61,7 +61,11 @@ async def create_user(mxid, display_name, avatar_mxc=None, avatar_bytes=None, av
     await user_api.ensure_registered()
 
     # Set user display name
-    await user_api.set_displayname(display_name, check_current=True)
+    # NOTE: we avoid changing the display name for zephyr ghosts if it is already set,
+    # since we are likely downgrading it from display name to just username
+    current_displayname = await user_api.get_displayname(mxid)
+    if ((is_zephyr and current_displayname is None) or not is_zephyr) and display_name != current_displayname:
+        await user_api.set_displayname(display_name)
 
     # Set profile picture if needed
     if avatar_bytes:
